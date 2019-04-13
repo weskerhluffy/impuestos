@@ -7,8 +7,6 @@
 <hibernate-reverse-engineering>
 	<table-filter match-schema="public"
 		match-name="factura_vigente" />
-	<table-filter match-schema="public"
-		match-name="monto_factura_vigente" />
 
 	<table schema="public" name="factura_vigente">
 		<meta attribute="extra-import">java.util.stream.Collectors</meta>
@@ -34,6 +32,12 @@
 		</column>
 	</table>
 	<table schema="public" name="factura_vigente">
+		<primary-key>
+			<generator class="identity"></generator>
+			<key-column name="id" />
+		</primary-key>
+	</table>
+	<table schema="public" name="monto_factura_vigente">
 		<primary-key>
 			<generator class="identity"></generator>
 			<key-column name="id" />

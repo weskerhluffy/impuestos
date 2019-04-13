@@ -75,6 +75,13 @@ AS
           FROM   fecha_inicio_depreciacion_factura m) AS a
   WHERE  a.tiempo_creacion = a.ultimo_creado; 
 
+CREATE FUNCTION mesdif(fecha1 date, fecha2 date) RETURNS integer AS $$
+ BEGIN
+ RETURN (DATE_PART('year',  fecha1) - DATE_PART('year',  fecha2)) * 12 +
+        (DATE_PART('month', fecha1) - DATE_PART('month', fecha2));
+ END; $$
+ LANGUAGE PLPGSQL;  
+ 
 drop view if exists factura_vigente;  
 CREATE OR REPLACE view factura_vigente 
 AS 
@@ -135,9 +142,3 @@ CREATE TABLE factura_declarada(
 -- XXX: http://www.postgresqltutorial.com/postgresql-create-function/
 -- XXX: http://www.sqlines.com/postgresql/how-to/datediff
  
-CREATE FUNCTION mesdif(fecha1 date, fecha2 date) RETURNS integer AS $$
- BEGIN
- RETURN (DATE_PART('year',  fecha1) - DATE_PART('year',  fecha2)) * 12 +
-        (DATE_PART('month', fecha1) - DATE_PART('month', fecha2));
- END; $$
- LANGUAGE PLPGSQL;
