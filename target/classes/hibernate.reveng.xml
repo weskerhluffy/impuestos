@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-reverse-engineering-3.0.dtd" >
+
+<!-- XXX: https://eugencovaciq.wordpress.com/2016/02/01/hibernate-tools-reverse-engineering-using-maven/ -->
+<!-- XXX: https://stackoverflow.com/questions/44480415/where-is-the-reverse-engineering-feature-in-hibernate5 -->
+<!-- XXX: http://www.lostinsoftware.com/2015/08/reverse-engineering-and-code-generation/ -->
+<hibernate-reverse-engineering>
+	<table-filter match-schema="public"
+		match-name="factura_vigente" />
+	<table-filter match-schema="public"
+		match-name="monto_factura_vigente" />
+
+	<table schema="public" name="factura_vigente">
+		<meta attribute="extra-import">java.util.stream.Collectors</meta>
+		<meta attribute="extra-import">java.util.List</meta>
+		<meta attribute="extra-import">javax.persistence.Transient</meta>
+
+
+		<meta attribute="class-code">
+        <![CDATA[
+// Aca nomas probando controla la autodegeneracion con <<class-code >>
+        ]]>
+		</meta>
+		<primary-key>
+			<generator class="identity"></generator>
+			<key-column name="id" />
+		</primary-key>
+		<column name="folio" type="string">
+			<meta attribute="pre-cond">
+				// Aqui nomas probando controlar la degeneracion por plantillas &amp;&amp; 
+				
+				
+			</meta>
+		</column>
+	</table>
+	<table schema="public" name="factura_vigente">
+		<primary-key>
+			<generator class="identity"></generator>
+			<key-column name="id" />
+		</primary-key>
+	</table>
+
+</hibernate-reverse-engineering>

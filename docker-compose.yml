@@ -1,0 +1,11 @@
+version: '3.7'
+services:
+  impuestos_db:
+    image: postgres
+    restart: always
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_USER: algo
+      POSTGRES_PASSWORD: algo
+      POSTGRES_DB: impuestos

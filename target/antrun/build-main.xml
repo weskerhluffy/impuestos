@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="maven-antrun-" default="main"  >
+<target name="main">
+  <echo message="Start generating entities .."/>
+  <taskdef classname="org.hibernate.tool.ant.HibernateToolTask" name="hibernatetool"/>
+  <hibernatetool destdir="src/main/java" templatepath="src/main/resources/templates">
+    <jdbcconfiguration propertyfile="src/main/resources/hibernate.reveng.properties" revengfile="src/main/resources/hibernate.reveng.xml" detectmanytomany="true" packagename="org.nada.models"/>
+    <hbm2java jdk5="true" ejb3="true"/>
+  </hibernatetool>
+  <echo message="End generating entities"/>
+</target>
+</project>
