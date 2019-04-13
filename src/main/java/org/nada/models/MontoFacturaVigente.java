@@ -19,7 +19,11 @@ import javax.persistence.Table;
 public class MontoFacturaVigente  implements java.io.Serializable {
 
 
-     private MontoFacturaVigenteId id;
+     /**
+	 * 
+	 */
+	private static final long serialVersionUID = 9106110709975099086L;
+	private MontoFacturaVigenteId id;
 
     public MontoFacturaVigente() {
     }
