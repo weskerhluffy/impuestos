@@ -7,7 +7,8 @@ spring:
    profiles:
       active: dev
    main:
-      banner-mode: 'on'
+# XXX: https://www.mkyong.com/spring-boot/spring-boot-how-to-disable-the-spring-logo-banner/
+      banner-mode: console
    jpa:
       show-sql: true
       hibernate:
@@ -16,6 +17,7 @@ spring:
    datasource:
       username: algo
       password: algo
+# XXX: http://www.springboottutorial.com/spring-boot-and-h2-in-memory-database
    h2:
       console:
          enabled: true
