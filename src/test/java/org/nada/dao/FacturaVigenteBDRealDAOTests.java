@@ -3,12 +3,17 @@ package org.nada.dao;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Before;
@@ -40,6 +45,11 @@ import lombok.extern.slf4j.Slf4j;
 @AutoConfigureTestDatabase(replace = Replace.NONE)
 public class FacturaVigenteBDRealDAOTests {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FacturaVigenteBDRealDAOTests.class);
+	private static final String FECHA_INICIAL = "2019-01-01";
+	private static final LocalDate FECHA_INICIAL_LOCAL_DATE = LocalDate.parse(FECHA_INICIAL);
+	private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+	@Autowired
+	private FacturaVigenteDAO facturaVigenteDAO;
 
 	// XXX:
 	// https://stackoverflow.com/questions/4699381/best-way-to-inject-hibernate-session-by-spring-3
@@ -52,20 +62,25 @@ public class FacturaVigenteBDRealDAOTests {
 	private TestEntityManager entityManager;
 
 	@Before
-	public void setup() {
+	public void setup() throws ParseException {
 		facturas = new ArrayList<Factura>();
-		Date ahora = new Date();
 		ultimoMontoDeducibleFacturas = new HashMap<>();
 		ultimaFechaInicioDepreciacionFacturas = new HashMap<>();
 		ultimoPorcentajeDepreciacionAnualFacturas = new HashMap<>();
 
 		for (Integer i = 0; i < 10; i++) {
+			// XXX: https://www.baeldung.com/java-date-to-localdate-and-localdatetime
+			// XXX:
+			// https://stackoverflow.com/questions/428918/how-can-i-increment-a-date-by-one-day-in-java/23910924#23910924
+			Date fechaInicial = Date.from(
+					FECHA_INICIAL_LOCAL_DATE.plusMonths(i).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
 			// XXX:
 			// https://stackoverflow.com/questions/6389827/string-variable-interpolation-java
-			Factura factura = new Factura(String.format("rfc%02d", i), String.format("folio_%02d", i), ahora, ahora,
-					ahora);
+			Factura factura = new Factura(String.format("rfc%02d", i), String.format("folio_%02d", i), fechaInicial,
+					fechaInicial, fechaInicial);
 			Integer facturaId = (Integer) entityManager.persistAndGetId(factura);
 			factura.setId(facturaId);
+			LOGGER.debug("TMPH fecha {}", SIMPLE_DATE_FORMAT.format(factura.getPeriodo()));
 
 			for (Integer j = 0; j < 10; j++) {
 				MontoFactura montoFactura = new MontoFactura(factura, i * 10, new Date());
@@ -133,5 +148,17 @@ public class FacturaVigenteBDRealDAOTests {
 		assertTrue(facturaVigente.getMonto() == ultimoMontoFacturas.get(facturaId).getMonto());
 		assertNull(facturaVigente.getPorcentaje());
 		assertNull(facturaVigente.getFechaInicioDepreciacion());
+	}
+
+	@Test
+	public void pruebaFacturasDepreciadas() throws ParseException {
+		Integer deltaMeses = 4;
+		Date ahora = Date.from(FECHA_INICIAL_LOCAL_DATE.plusMonths(deltaMeses).atStartOfDay()
+				.atZone(ZoneId.systemDefault()).toInstant());
+		LOGGER.debug("TMPH fecha delta {}", SIMPLE_DATE_FORMAT.format(ahora));
+		List<FacturaVigente> facturaVigentes = facturaVigenteDAO.findFacturasDepreciadas(ahora);
+		LOGGER.debug("TMPH lo sacad {}", facturaVigentes.stream().map(f -> SIMPLE_DATE_FORMAT.format(f.getPeriodo()))
+				.collect(Collectors.toList()));
+		assertTrue(facturaVigentes.size() == deltaMeses);
 	}
 }
