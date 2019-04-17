@@ -1,5 +1,6 @@
 package org.nada.dao;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -64,14 +65,16 @@ public class FacturaVigenteBDRealDAOTests {
 			// https://stackoverflow.com/questions/6389827/string-variable-interpolation-java
 			Factura factura = new Factura(String.format("rfc%02d", i), String.format("folio_%02d", i), ahora, ahora);
 			Integer facturaId = (Integer) entityManager.persistAndGetId(factura);
+			factura.setId(facturaId);
 
 			for (Integer j = 0; j < 10; j++) {
 				MontoFactura montoFactura = new MontoFactura(factura, i * 10, new Date());
-				MontoDeducibleFactura montoDeducibleFactura = new MontoDeducibleFactura(factura, i * 0.9, new Date());
+				MontoDeducibleFactura montoDeducibleFactura = new MontoDeducibleFactura(factura, j * 0.9, new Date());
 				FechaInicioDepreciacionFactura fechaInicioDepreciacionFactura = new FechaInicioDepreciacionFactura(
 						factura, new Date(), new Date());
 				PorcentajeDepreciacionAnualFactura porcentajeDepreciacionAnualFactura = new PorcentajeDepreciacionAnualFactura(
-						factura, 30, new Date());
+						factura, Math.min((j + 1) * 10, 99), new Date());
+				LOGGER.debug("TMPH porcentaje dep {} para fact {}", porcentajeDepreciacionAnualFactura, factura);
 
 				entityManager.persist(montoFactura);
 				entityManager.persist(montoDeducibleFactura);
@@ -104,5 +107,25 @@ public class FacturaVigenteBDRealDAOTests {
 			assertTrue(Objects.equals(facturaVigente.getPorcentaje(),
 					ultimoPorcentajeDepreciacionAnualFacturas.get(facturaId).getPorcentaje()));
 		}
+	}
+
+	public void testVigenteSinDepreciacion() {
+		Date ahora = new Date();
+		Factura factura = new Factura(String.format("rfc%02d", 99), String.format("folio_%02d", 99), ahora, ahora);
+		Integer facturaId = (Integer) entityManager.persistAndGetId(factura);
+
+		for (Integer i = 0; i < 10; i++) {
+			MontoFactura montoFactura = new MontoFactura(factura, i * 10, new Date());
+
+			entityManager.persist(montoFactura);
+
+			ultimoMontoFacturas.put(facturaId, montoFactura);
+		}
+
+		FacturaVigente facturaVigente = entityManager.find(FacturaVigente.class, facturaId);
+
+		assertTrue(facturaVigente.getMonto() == ultimoMontoFacturas.get(facturaId).getMonto());
+		assertTrue(facturaVigente.getPorcentaje() == 0);
+		assertNull(facturaVigente.getFecha() );
 	}
 }
