@@ -13,6 +13,7 @@ public class FacturaVigenteDAOCustomImpl implements FacturaVigenteDAOCustom {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FacturaVigenteDAOCustomImpl.class);
 	// XXX:
 	// https://stackoverflow.com/questions/26606608/how-to-manually-start-a-transaction-on-a-shared-entitymanager-in-spring
+	// XXX: https://github.com/spring-projects/spring-framework/issues/15076
 	@PersistenceContext
 	private EntityManager entityManager;
 

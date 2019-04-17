@@ -1,8 +1,9 @@
 # XXX: https://www.baeldung.com/spring-boot-logging
+# XXX: https://www.mkyong.com/spring-boot/spring-boot-profile-based-properties-and-yaml-example/
 logging:
    level:
       .: WARN
-      org.nada: ERROR
+      org.nada: DEBUG
 spring:
    profiles:
       active: dev

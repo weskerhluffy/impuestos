@@ -89,19 +89,13 @@ AS
          f.rfc_emisor, 
          f.folio, 
          Coalesce(md.monto, m.monto)                                      AS 
-         monto 
-            , 
+         monto , 
          p.porcentaje, 
          fd.fecha, 
          Extract (year FROM fd.fecha)                                     AS ano 
          , 
          Date_part('month', fd.fecha) 
-         AS mes, 
-         ( ( ( Coalesce(md.monto, 0) * ( Coalesce(p.porcentaje, 0) / 100 ) ) / 
-             12 
-           ) + 
-           0.005 ) * Mesdif(Date(Now()), Coalesce(fd.fecha, Date(Now()))) AS 
-         monto_depreciado 
+         AS mes
   FROM   factura f 
          INNER JOIN monto_factura_vigente m 
                  ON f.id = m.id_factura 
@@ -110,8 +104,17 @@ AS
          LEFT JOIN porcentaje_depreciacion_anual_factura_vigente p 
                 ON f.id = p.id_factura 
          LEFT JOIN fecha_inicio_depreciacion_factura_vigente fd 
-                ON f.id = fd.id_factura 
-                   AND Mesdif(Date(Now()), Coalesce(fd.fecha, Date(Now()))) > 0; 
+                ON f.id = fd.id_factura; 
+                   
+                   
+   SELECT f.*, 
+         ( ( ( f.monto * ( Coalesce(f.porcentaje, 0) / 100 ) ) / 
+             12 
+           ) + 
+           0.005 ) * Mesdif(Date('2020-01-01'), Coalesce(f.fecha, Date('2020-01-01'))) AS 
+         monto_depreciado 
+  FROM   factura_vigente f 
+                  where Mesdif(Date('2020-01-01'), Coalesce(f.fecha, Date('2020-01-01'))) > 0;                   
                  
 -- TODO: Trigger para guardar actualizaciones pendientes de declaraciones cuando haya nuevos vigentes.
 

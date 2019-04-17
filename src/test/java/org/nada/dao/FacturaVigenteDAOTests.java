@@ -30,6 +30,7 @@ public class FacturaVigenteDAOTests {
 	@Test
 	public void pruebaCargaTodo() {
 		Iterable<FacturaVigente> todos = facturaVigenteDAO.findAll();
+		// XXX: https://stackoverflow.com/questions/9720195/what-is-the-best-way-to-get-the-count-length-size-of-an-iterator
 		assertTrue(StreamSupport.stream(todos.spliterator(), false).count() > 0);
 	}
 }
