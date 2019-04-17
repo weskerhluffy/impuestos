@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.lang3.time.DateUtils;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +31,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
+// XXX: https://stackoverflow.com/questions/35004139/how-to-populate-test-data-programmatically-for-integration-tests-in-spring
 @Slf4j
 @RunWith(SpringRunner.class)
 @DataJpaTest
@@ -63,7 +62,8 @@ public class FacturaVigenteBDRealDAOTests {
 		for (Integer i = 0; i < 10; i++) {
 			// XXX:
 			// https://stackoverflow.com/questions/6389827/string-variable-interpolation-java
-			Factura factura = new Factura(String.format("rfc%02d", i), String.format("folio_%02d", i), ahora, ahora);
+			Factura factura = new Factura(String.format("rfc%02d", i), String.format("folio_%02d", i), ahora, ahora,
+					ahora);
 			Integer facturaId = (Integer) entityManager.persistAndGetId(factura);
 			factura.setId(facturaId);
 
@@ -99,10 +99,13 @@ public class FacturaVigenteBDRealDAOTests {
 			Integer facturaId = factura.getId();
 			FacturaVigente facturaVigente = entityManager.find(FacturaVigente.class, facturaId);
 			// TODO: Anadir tostring a plantilla de pojo
-			LOGGER.debug("TMPH factura vigente enc {} ultima fecha inicio dep {}", facturaVigente.getFecha().toString(),
+			LOGGER.debug("TMPH factura vigente enc {} ultima fecha inicio dep {}",
+					facturaVigente.getFechaInicioDepreciacion().toString(),
 					ultimaFechaInicioDepreciacionFacturas.get(facturaId).getFecha());
 			assertTrue(facturaVigente.getMonto() == ultimoMontoDeducibleFacturas.get(facturaId).getMonto());
-			assertTrue(DateUtils.isSameDay(facturaVigente.getFecha(),
+			// XXX:
+			// https://stackoverflow.com/questions/1439779/how-to-compare-two-dates-without-the-time-portion
+			assertTrue(DateUtils.isSameDay(facturaVigente.getFechaInicioDepreciacion(),
 					ultimaFechaInicioDepreciacionFacturas.get(facturaId).getFecha()));
 			assertTrue(Objects.equals(facturaVigente.getPorcentaje(),
 					ultimoPorcentajeDepreciacionAnualFacturas.get(facturaId).getPorcentaje()));
@@ -112,7 +115,8 @@ public class FacturaVigenteBDRealDAOTests {
 	@Test
 	public void testVigenteSinDepreciacion() {
 		Date ahora = new Date();
-		Factura factura = new Factura(String.format("rfc%02d", 99), String.format("folio_%02d", 99), ahora, ahora);
+		Factura factura = new Factura(String.format("rfc%02d", 99), String.format("folio_%02d", 99), ahora, ahora,
+				ahora);
 		Integer facturaId = (Integer) entityManager.persistAndGetId(factura);
 
 		for (Integer i = 0; i < 10; i++) {
@@ -128,6 +132,6 @@ public class FacturaVigenteBDRealDAOTests {
 
 		assertTrue(facturaVigente.getMonto() == ultimoMontoFacturas.get(facturaId).getMonto());
 		assertNull(facturaVigente.getPorcentaje());
-		assertNull(facturaVigente.getFecha());
+		assertNull(facturaVigente.getFechaInicioDepreciacion());
 	}
 }

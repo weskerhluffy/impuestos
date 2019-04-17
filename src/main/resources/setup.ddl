@@ -3,6 +3,7 @@ CREATE TABLE factura(
  id serial PRIMARY KEY,
  rfc_emisor VARCHAR (50) NOT NULL,
  folio VARCHAR (100) NOT NULL,
+ periodo date not null,
  fecha_creacion timestamp not null default CURRENT_DATE,
  fecha_ultima_modificacion timestamp not null default CURRENT_DATE
 );
@@ -91,11 +92,12 @@ AS
          Coalesce(md.monto, m.monto)                                      AS 
          monto , 
          p.porcentaje, 
-         fd.fecha, 
-         Extract (year FROM fd.fecha)                                     AS ano 
+         fd.fecha as fecha_inicio_depreciacion, 
+         Extract (year FROM f.periodo)                                     AS ano 
          , 
-         Date_part('month', fd.fecha) 
-         AS mes
+         Date_part('month', f.periodo)
+         AS mes,
+         f.periodo
   FROM   factura f 
          INNER JOIN monto_factura_vigente m 
                  ON f.id = m.id_factura 
