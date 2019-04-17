@@ -109,6 +109,7 @@ public class FacturaVigenteBDRealDAOTests {
 		}
 	}
 
+	@Test
 	public void testVigenteSinDepreciacion() {
 		Date ahora = new Date();
 		Factura factura = new Factura(String.format("rfc%02d", 99), String.format("folio_%02d", 99), ahora, ahora);
@@ -123,9 +124,10 @@ public class FacturaVigenteBDRealDAOTests {
 		}
 
 		FacturaVigente facturaVigente = entityManager.find(FacturaVigente.class, facturaId);
+		LOGGER.debug("TMPH fact vig {}", facturaVigente);
 
 		assertTrue(facturaVigente.getMonto() == ultimoMontoFacturas.get(facturaId).getMonto());
-		assertTrue(facturaVigente.getPorcentaje() == 0);
-		assertNull(facturaVigente.getFecha() );
+		assertNull(facturaVigente.getPorcentaje());
+		assertNull(facturaVigente.getFecha());
 	}
 }
