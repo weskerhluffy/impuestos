@@ -24,6 +24,10 @@ spring:
          enabled: true
 server:
    email: default@mkyong.com
+   port : 9090
+security:
+   basic:
+      enabled: false
 ---
 spring:
    profiles: dev

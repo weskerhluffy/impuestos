@@ -41,6 +41,8 @@ public class FacturaVigenteDAOTests {
 		assertTrue(StreamSupport.stream(todos.spliterator(), false).count() > 0);
 	}
 
+	// XXX:
+	// https://stackoverflow.com/questions/35004139/how-to-populate-test-data-programmatically-for-integration-tests-in-spring
 	@Test
 	@Sql({ "/test_facturas_sin_depreciar.sql" })
 	public void pruebaFacturasSinDepreciar() {
