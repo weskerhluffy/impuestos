@@ -24,3 +24,5 @@ hs_err_pid*
 target
 out
 *.swp
+a.csv
+datos.csv

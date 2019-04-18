@@ -54,6 +54,7 @@
 				<td>${factura.porcentaje}</td>
 				<td>${factura.fechaInicioDepreciacion}</td>
 				<td>${factura.periodo}</td>
+				<!-- XXX: https://stackoverflow.com/questions/14821329/freemarker-and-hashmap-how-do-i-get-key-value -->
 				<td>${montoDepreciacionAnualPorFacturaId[factura.id]}</td>
 			</tr>
 			</#items> <#else></#list>
