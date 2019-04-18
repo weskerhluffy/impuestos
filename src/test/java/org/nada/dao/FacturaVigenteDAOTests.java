@@ -2,6 +2,8 @@ package org.nada.dao;
 
 import static org.junit.Assert.assertTrue;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.StreamSupport;
@@ -21,6 +23,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 @ActiveProfiles("test")
 public class FacturaVigenteDAOTests {
 
+	private static final String FECHA_INICIAL = "2019-01-01";
+	private static final LocalDate FECHA_INICIAL_LOCAL_DATE = LocalDate.parse(FECHA_INICIAL);
 	@Autowired
 	FacturaVigenteDAO facturaVigenteDAO;
 
@@ -37,12 +41,11 @@ public class FacturaVigenteDAOTests {
 		assertTrue(StreamSupport.stream(todos.spliterator(), false).count() > 0);
 	}
 
-	/*
 	@Test
-	@Sql({ "/test_facturas_depreciadas.sql" })
-	public void pruebaFacturasDepreciadas() {
-		List<FacturaVigente> facturaVigentes = facturaVigenteDAO.findFacturasDepreciadas(new Date());
-		assertTrue(facturaVigentes.size() == 2);
+	@Sql({ "/test_facturas_sin_depreciar.sql" })
+	public void pruebaFacturasSinDepreciar() {
+		Date ahora = Date.from(FECHA_INICIAL_LOCAL_DATE.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+		List<FacturaVigente> facturaVigentes = facturaVigenteDAO.getFacturasSinDepreciacion(ahora);
+		assertTrue(facturaVigentes.size() == 3);
 	}
-	*/
 }

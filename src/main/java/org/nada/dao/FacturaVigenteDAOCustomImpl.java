@@ -1,20 +1,17 @@
 package org.nada.dao;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import javax.management.RuntimeErrorException;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.transaction.Transactional;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Example;
 import org.nada.models.FacturaVigente;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class FacturaVigenteDAOCustomImpl implements FacturaVigenteDAOCustom {
 
@@ -36,15 +33,22 @@ public class FacturaVigenteDAOCustomImpl implements FacturaVigenteDAOCustom {
 	@SuppressWarnings("unchecked")
 	public List<FacturaVigente> getFacturasSinDepreciacion(Date fecha) {
 		List<FacturaVigente> facturas = null;
-		Session session = (Session) entityManager.getDelegate();
-		FacturaVigente facturaVigente = new FacturaVigente();
-		facturaVigente.setPeriodo(fecha);
-		facturaVigente.setPorcentaje(null);
-		Example facturaVigenteEjemplo = Example.create(facturaVigente);
-		// XXX: https://dzone.com/articles/hibernate-query-example-qbe
-		@SuppressWarnings("deprecation")
-		Criteria criteria = session.createCriteria(FacturaVigente.class).add(facturaVigenteEjemplo);
-		facturas = criteria.list();
+		// TODO: Crear named query, tiene que ser en plantillas de autogeneracion de
+		// pojos
+		// XXX:
+		// https://stackoverflow.com/questions/15948795/is-it-possible-to-use-raw-sql-within-a-spring-repository
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(fecha);
+
+		Query q = entityManager.createNativeQuery(
+				"select f.* from factura_vigente f where f.ano=:ano and f.mes=:mes and f.porcentaje is null",
+				FacturaVigente.class);
+		// XXX: https://www.baeldung.com/java-year-month-day
+		q.setParameter("ano", calendar.get(Calendar.YEAR));
+		q.setParameter("mes", calendar.get(Calendar.MONTH) + 1);
+
+		facturas = q.getResultList();
+		LOGGER.debug("TMPH creada lista {}", facturas);
 		for (FacturaVigente facturaVigente2 : facturas) {
 			if (facturaVigente2.getFechaInicioDepreciacion() != null || facturaVigente2.getPorcentaje() != null) {
 				throw new RuntimeException("Factura " + facturaVigente2.getId() + " no es consistente");
