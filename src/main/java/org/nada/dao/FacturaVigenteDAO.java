@@ -17,7 +17,7 @@ public interface FacturaVigenteDAO extends CrudRepository<FacturaVigente, Intege
 	// https://stackoverflow.com/questions/878573/java-multiline-string?page=2&tab=votes
 //	@Query(select f from FacturaVigente f)
 
-	@Query(value = "SELECT f.*  FROM factura_vigente f where Mesdif(:periodo, Coalesce(f.periodo, :periodo)) > 0", nativeQuery = true)
+	@Query(value = "SELECT f.*  FROM factura_vigente f where Mesdif(:periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) > 0 or f.fecha_inicio_depreciacion=:periodo", nativeQuery = true)
 //    @Query(value = `SELECT u.* FROM Users u WHERE u.status = :periodo AND u.name = :periodo`, nativeQuery = true)
 	public List<FacturaVigente> findFacturasDepreciadas(@Param("periodo") Date periodo);
 }

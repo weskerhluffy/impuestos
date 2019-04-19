@@ -135,7 +135,7 @@ public class FacturaVigenteBDRealDAOTests {
 		Integer facturaId = (Integer) entityManager.persistAndGetId(factura);
 
 		for (Integer i = 0; i < 10; i++) {
-			MontoFactura montoFactura = new MontoFactura(factura, i * 10, new Date());
+			MontoFactura montoFactura = new MontoFactura(factura, i * 10.0, new Date());
 
 			entityManager.persist(montoFactura);
 

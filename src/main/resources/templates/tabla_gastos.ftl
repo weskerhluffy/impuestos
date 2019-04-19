@@ -52,10 +52,10 @@
 				<td>${factura.folio}</td>
 				<td>${factura.monto}</td>
 				<td>${factura.porcentaje}</td>
-				<td>${factura.fechaInicioDepreciacion}</td>
-				<td>${factura.periodo}</td>
+				<td>${factura.fechaInicioDepreciacion?string["yyyy-MM-dd"]}</td>
+				<td>${factura.periodo?string["yyyy-MM-dd"]}</td>
 				<!-- XXX: https://stackoverflow.com/questions/14821329/freemarker-and-hashmap-how-do-i-get-key-value -->
-				<td>${montoDepreciacionAnualPorFacturaId[factura.id]}</td>
+				<td>${montoDepreciacionAnualPorFacturaId[factura.id?string]}</td>
 			</tr>
 			</#items> <#else></#list>
 		</tbody>

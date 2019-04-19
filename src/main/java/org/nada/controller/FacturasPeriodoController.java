@@ -1,7 +1,6 @@
 package org.nada.controller;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
@@ -11,27 +10,21 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.hibernate.result.NoMoreReturnsException;
 import org.nada.dao.FacturaVigenteDAO;
 import org.nada.models.Factura;
 import org.nada.models.FacturaVigente;
 import org.nada.models.FechaInicioDepreciacionFactura;
-import org.nada.models.MontoDeducibleFactura;
 import org.nada.models.MontoFactura;
 import org.nada.models.PorcentajeDepreciacionAnualFactura;
 import org.slf4j.Logger;
@@ -42,15 +35,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.opencsv.CSVReader;
-
-import lombok.extern.slf4j.Slf4j;
 
 // XXX: http://zetcode.com/springboot/controller/
 @Controller
@@ -87,9 +77,10 @@ public class FacturasPeriodoController {
 		params.put("periodo", periodo);
 		var facturasNoDepreciadas = facturaVigenteDAO.getFacturasSinDepreciacion(periodo);
 		var facturasDepreciadas = facturaVigenteDAO.findFacturasDepreciadas(periodo);
-		var montoDepreciacionAnualPorFacturaId = new HashMap<Integer, Double>();
+		var montoDepreciacionAnualPorFacturaId = new HashMap<String, Double>();
 		for (FacturaVigente facturaVigente : facturasDepreciadas) {
-			montoDepreciacionAnualPorFacturaId.put(facturaVigente.getId(),
+			// XXX: https://learn2program.wordpress.com/2008/07/23/how-to-use-int-as-the-key-of-a-map-to-display-in-freemarker/
+			montoDepreciacionAnualPorFacturaId.put(facturaVigente.getId().toString(),
 					calculaMontoDepreciacionMensual(facturaVigente));
 		}
 		params.put("montoDepreciacionAnualPorFacturaId", montoDepreciacionAnualPorFacturaId);
@@ -174,6 +165,9 @@ public class FacturasPeriodoController {
 				}
 
 				Factura factura = (Factura) instanciasDeLinea.get(Factura.class);
+				Date fechaActual = new Date();
+				factura.setFechaCreacion(fechaActual);
+				factura.setFechaUltimaModificacion(fechaActual);
 				entityManager.persist(factura);
 				entityManager.flush();
 				LOGGER.debug("TMPH factura guardada {}", factura);
@@ -185,11 +179,24 @@ public class FacturasPeriodoController {
 						propiedad.setAccessible(true);
 						propiedad.set(instancia, factura);
 						propiedad.setAccessible(false);
-						entityManager.persist(instancia);
 					} catch (NoSuchFieldException e) {
+						continue;
 					}
 
 					LOGGER.debug("TMPH objecto {} seteada fact", instancia);
+					for (String nombrePropiedad : List.of("tiempoCreacion")) {
+						try {
+							Field propiedad = clase.getDeclaredField(nombrePropiedad);
+							propiedad.setAccessible(true);
+							propiedad.set(instancia, fechaActual);
+							propiedad.setAccessible(false);
+						} catch (NoSuchFieldException e) {
+							continue;
+						}
+					}
+					entityManager.persist(instancia);
+					LOGGER.debug("TMPH objecto {} setadas prop", instancia);
+
 				}
 			}
 		} catch (IllegalStateException | IOException e1) {
@@ -203,6 +210,7 @@ public class FacturasPeriodoController {
 	// TODO: Mover a modelo
 	private Double calculaMontoDepreciacionMensual(FacturaVigente facturaVigente) {
 		Double monto;
+		LOGGER.debug("TMPH calculando monto mensual {}", facturaVigente);
 		monto = (facturaVigente.getMonto() * (facturaVigente.getPorcentaje() / 1200));
 		return monto;
 	}
