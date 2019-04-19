@@ -83,12 +83,12 @@ public class FacturaVigenteBDRealDAOTests {
 			LOGGER.debug("TMPH fecha {}", SIMPLE_DATE_FORMAT.format(factura.getPeriodo()));
 
 			for (Integer j = 0; j < 10; j++) {
-				MontoFactura montoFactura = new MontoFactura(factura, i * 10, new Date());
+				MontoFactura montoFactura = new MontoFactura(factura, i * 10.0, new Date());
 				MontoDeducibleFactura montoDeducibleFactura = new MontoDeducibleFactura(factura, j * 0.9, new Date());
 				FechaInicioDepreciacionFactura fechaInicioDepreciacionFactura = new FechaInicioDepreciacionFactura(
 						factura, new Date(), new Date());
 				PorcentajeDepreciacionAnualFactura porcentajeDepreciacionAnualFactura = new PorcentajeDepreciacionAnualFactura(
-						factura, Math.min((j + 1) * 10, 99), new Date());
+						factura, Math.min((j + 1) * 10, 99) * 1.0, new Date());
 				LOGGER.debug("TMPH porcentaje dep {} para fact {}", porcentajeDepreciacionAnualFactura, factura);
 
 				entityManager.persist(montoFactura);

@@ -21,6 +21,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.hibernate.result.NoMoreReturnsException;
@@ -54,10 +57,12 @@ import lombok.extern.slf4j.Slf4j;
 public class FacturasPeriodoController {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FacturasPeriodoController.class);
 	private FacturaVigenteDAO facturaVigenteDAO;
+	private EntityManager entityManager;
 
 	@Autowired
-	public FacturasPeriodoController(FacturaVigenteDAO facturaVigenteDAO) {
+	public FacturasPeriodoController(FacturaVigenteDAO facturaVigenteDAO, EntityManager entityManager) {
 		this.facturaVigenteDAO = facturaVigenteDAO;
+		this.entityManager = entityManager;
 	}
 
 	@RequestMapping(value = "/getDateAndTime")
@@ -100,6 +105,7 @@ public class FacturasPeriodoController {
 		return "formaSubeCsv";
 	}
 
+	@Transactional
 	@PostMapping("/subeCsv")
 	public String handleFileUpload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes)
 			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
@@ -168,6 +174,9 @@ public class FacturasPeriodoController {
 				}
 
 				Factura factura = (Factura) instanciasDeLinea.get(Factura.class);
+				entityManager.persist(factura);
+				entityManager.flush();
+				LOGGER.debug("TMPH factura guardada {}", factura);
 				for (Map.Entry<Class<?>, Serializable> entry : instanciasDeLinea.entrySet()) {
 					Class<?> clase = entry.getKey();
 					Serializable instancia = entry.getValue();
@@ -176,6 +185,7 @@ public class FacturasPeriodoController {
 						propiedad.setAccessible(true);
 						propiedad.set(instancia, factura);
 						propiedad.setAccessible(false);
+						entityManager.persist(instancia);
 					} catch (NoSuchFieldException e) {
 					}
 

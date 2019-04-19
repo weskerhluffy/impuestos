@@ -103,7 +103,7 @@ public class Factura implements java.io.Serializable {
 	}
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "fecha_creacion", nullable = false, length = 29)
+	@Column(name = "fecha_creacion", nullable = true, length = 29)
 	public Date getFechaCreacion() {
 		return this.fechaCreacion;
 	}
@@ -113,7 +113,7 @@ public class Factura implements java.io.Serializable {
 	}
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "fecha_ultima_modificacion", nullable = false, length = 29)
+	@Column(name = "fecha_ultima_modificacion", nullable = true, length = 29)
 	public Date getFechaUltimaModificacion() {
 		return this.fechaUltimaModificacion;
 	}

@@ -5,7 +5,8 @@ CREATE TABLE factura(
  folio VARCHAR (100) NOT NULL,
  periodo date not null,
  fecha_creacion timestamp not null default CURRENT_DATE,
- fecha_ultima_modificacion timestamp not null default CURRENT_DATE
+ fecha_ultima_modificacion timestamp not null default CURRENT_DATE,
+ unique (rfc_emisor, folio)
 );
 
 drop table if exists monto_factura cascade;

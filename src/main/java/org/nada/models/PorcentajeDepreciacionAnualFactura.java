@@ -74,7 +74,7 @@ public class PorcentajeDepreciacionAnualFactura implements java.io.Serializable 
 	}
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "tiempo_creacion", nullable = false, length = 29)
+	@Column(name = "tiempo_creacion", nullable = true, length = 29)
 	public Date getTiempoCreacion() {
 		return this.tiempoCreacion;
 	}
