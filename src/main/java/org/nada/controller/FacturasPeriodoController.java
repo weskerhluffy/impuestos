@@ -123,17 +123,19 @@ public class FacturasPeriodoController {
 			reader = new CSVReader(new FileReader(convFile));
 			String[] line;
 			while ((line = reader.readNext()) != null) {
+				Map<Class<?>, Serializable> instanciasDeLinea = new HashMap<>();
 				for (Map.Entry<Class<?>, Map<Integer, String>> entry : nombresPropiedades.entrySet()) {
 					Class<?> clase = entry.getKey();
 					Map<Integer, String> nombresPropiedadesPorIndice = entry.getValue();
 					// XXX:
-					// https://stackoverflow.com/questions/46393863/what-to-use-instead-of-class-newinstance
-					Serializable instancia = (Serializable) clase.getDeclaredConstructor().newInstance();
-					// XXX:
 					// https://stackoverflow.com/questions/13692700/good-way-to-get-any-value-from-a-java-set
 					Integer indiceCualquiera = nombresPropiedadesPorIndice.keySet().iterator().next();
-					// XXX: https://stackoverflow.com/questions/14721397/checking-if-a-string-is-empty-or-null-in-java/14721414
+					// XXX:
+					// https://stackoverflow.com/questions/14721397/checking-if-a-string-is-empty-or-null-in-java/14721414
 					if (!StringUtils.isEmpty(line[indiceCualquiera])) {
+						// XXX:
+						// https://stackoverflow.com/questions/46393863/what-to-use-instead-of-class-newinstance
+						Serializable instancia = (Serializable) clase.getDeclaredConstructor().newInstance();
 						for (Map.Entry<Integer, String> entry1 : nombresPropiedadesPorIndice.entrySet()) {
 							Integer indice = entry1.getKey();
 							String nombrePropiedad = entry1.getValue();
@@ -160,8 +162,24 @@ public class FacturasPeriodoController {
 							}
 							propiedad.setAccessible(false);
 						}
+						instanciasDeLinea.put(clase, instancia);
 						LOGGER.debug("TMPH objecto {} creado", instancia);
 					}
+				}
+
+				Factura factura = (Factura) instanciasDeLinea.get(Factura.class);
+				for (Map.Entry<Class<?>, Serializable> entry : instanciasDeLinea.entrySet()) {
+					Class<?> clase = entry.getKey();
+					Serializable instancia = entry.getValue();
+					try {
+						Field propiedad = clase.getDeclaredField("factura");
+						propiedad.setAccessible(true);
+						propiedad.set(instancia, factura);
+						propiedad.setAccessible(false);
+					} catch (NoSuchFieldException e) {
+					}
+
+					LOGGER.debug("TMPH objecto {} seteada fact", instancia);
 				}
 			}
 		} catch (IllegalStateException | IOException e1) {
