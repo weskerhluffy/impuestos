@@ -54,6 +54,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 import mx.gob.sat.cfd.x3.ComprobanteDocument;
+import mx.gob.sat.cfd.x3.ComprobanteDocument.Comprobante.Conceptos.Concepto;
 
 // XXX: http://zetcode.com/springboot/controller/
 @Controller
@@ -290,6 +291,16 @@ public class FacturasPeriodoController {
 				}
 				var folio = timbre.getAttributes().getNamedItem("UUID");
 				LOGGER.debug("TMPH el timbre {}:{}", folio.getNodeName(), folio.getNodeValue());
+				var periodo = timbre.getAttributes().getNamedItem("FechaTimbrado");
+				LOGGER.debug("TMPH la fecha {}:{}", periodo.getNodeName(), periodo.getNodeValue());
+
+				var conceptos = comprobanteDocument.getComprobante().getConceptos();
+				for (Concepto concepto : conceptos.getConceptoArray()) {
+					var atributosConcepto = concepto.getDomNode().getAttributes();
+					LOGGER.debug("TMPH elc oncep {}:{}", atributosConcepto.getNamedItem("Descripcion").getNodeValue(),
+							atributosConcepto.getNamedItem("Importe").getNodeValue());
+				}
+
 			}
 
 		}
