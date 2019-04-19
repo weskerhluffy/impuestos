@@ -21,7 +21,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.hibernate.result.NoMoreReturnsException;
 import org.nada.dao.FacturaVigenteDAO;
 import org.nada.models.Factura;
 import org.nada.models.FacturaVigente;
@@ -117,6 +119,7 @@ public class FacturasPeriodoController {
 		CSVReader reader = null;
 		try {
 			file.transferTo(convFile);
+			// XXX: https://www.mkyong.com/java/how-to-read-and-parse-csv-file-in-java/
 			reader = new CSVReader(new FileReader(convFile));
 			String[] line;
 			while ((line = reader.readNext()) != null) {
@@ -126,26 +129,38 @@ public class FacturasPeriodoController {
 					// XXX:
 					// https://stackoverflow.com/questions/46393863/what-to-use-instead-of-class-newinstance
 					Serializable instancia = (Serializable) clase.getDeclaredConstructor().newInstance();
-					for (Map.Entry<Integer, String> entry1 : nombresPropiedadesPorIndice.entrySet()) {
-						Integer indice = entry1.getKey();
-						String nombrePropiedad = entry1.getValue();
+					// XXX:
+					// https://stackoverflow.com/questions/13692700/good-way-to-get-any-value-from-a-java-set
+					Integer indiceCualquiera = nombresPropiedadesPorIndice.keySet().iterator().next();
+					// XXX: https://stackoverflow.com/questions/14721397/checking-if-a-string-is-empty-or-null-in-java/14721414
+					if (!StringUtils.isEmpty(line[indiceCualquiera])) {
+						for (Map.Entry<Integer, String> entry1 : nombresPropiedadesPorIndice.entrySet()) {
+							Integer indice = entry1.getKey();
+							String nombrePropiedad = entry1.getValue();
 
-						Field propiedad = clase.getDeclaredField(nombrePropiedad);
-						Class<?> tipoPropiedad = propiedad.getType();
-						String valorPropiedad = line[indice];
-						if (Objects.equals(tipoPropiedad, Double.class)) {
-							propiedad.setDouble(instancia, Double.parseDouble(valorPropiedad));
-						} else {
-							if (Objects.equals(tipoPropiedad, Date.class)) {
-								// XXX: https://www.mkyong.com/java8/java-8-how-to-convert-string-to-localdate/
-								LocalDate localDate = LocalDate.parse(valorPropiedad);
-								Date fecha = java.util.Date
-										.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
-								propiedad.set(instancia, fecha);
+							String valorPropiedad = line[indice];
+
+							Field propiedad = clase.getDeclaredField(nombrePropiedad);
+							// XXX:
+							// https://stackoverflow.com/questions/1239581/why-is-it-allowed-to-access-java-private-fields-via-reflection
+							propiedad.setAccessible(true);
+							Class<?> tipoPropiedad = propiedad.getType();
+							if (Objects.equals(tipoPropiedad, Double.class)) {
+								propiedad.set(instancia, Double.valueOf(valorPropiedad));
 							} else {
-								propiedad.set(instancia, valorPropiedad);
+								if (Objects.equals(tipoPropiedad, Date.class)) {
+									// XXX: https://www.mkyong.com/java8/java-8-how-to-convert-string-to-localdate/
+									LocalDate localDate = LocalDate.parse(valorPropiedad);
+									Date fecha = java.util.Date
+											.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+									propiedad.set(instancia, fecha);
+								} else {
+									propiedad.set(instancia, valorPropiedad);
+								}
 							}
+							propiedad.setAccessible(false);
 						}
+						LOGGER.debug("TMPH objecto {} creado", instancia);
 					}
 				}
 			}
