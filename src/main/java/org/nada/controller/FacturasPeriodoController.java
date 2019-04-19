@@ -4,14 +4,31 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.nada.dao.FacturaVigenteDAO;
+import org.nada.models.Factura;
 import org.nada.models.FacturaVigente;
+import org.nada.models.FechaInicioDepreciacionFactura;
+import org.nada.models.MontoDeducibleFactura;
+import org.nada.models.MontoFactura;
+import org.nada.models.PorcentajeDepreciacionAnualFactura;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,11 +99,18 @@ public class FacturasPeriodoController {
 	}
 
 	@PostMapping("/subeCsv")
-	public String handleFileUpload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+	public String handleFileUpload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes)
+			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
+			NoSuchMethodException, SecurityException, NoSuchFieldException {
 
 		redirectAttributes.addFlashAttribute("message", "You successfully uploadeo" + file.getOriginalFilename() + "!");
 		LOGGER.debug("TMPH se subio {}", file.getOriginalFilename());
-
+		// XXX:
+		// https://stackoverflow.com/questions/2625546/is-using-the-class-instance-as-a-map-key-a-best-practice
+		Map<Class<?>, Map<Integer, String>> nombresPropiedades = Map.of(Factura.class,
+				Map.of(0, "periodo", 1, "folio", 3, "rfcEmisor"), MontoFactura.class, Map.of(5, "monto"),
+				FechaInicioDepreciacionFactura.class, Map.of(9, "fecha"), PorcentajeDepreciacionAnualFactura.class,
+				Map.of(8, "porcentaje"));
 		// XXX:
 		// https://stackoverflow.com/questions/24339990/how-to-convert-a-multipart-file-to-file
 		var convFile = new File(System.getProperty("java.io.tmpdir") + "/" + file.getOriginalFilename());
@@ -96,12 +120,34 @@ public class FacturasPeriodoController {
 			reader = new CSVReader(new FileReader(convFile));
 			String[] line;
 			while ((line = reader.readNext()) != null) {
-				Integer i = 0;
-				for (String linea : line) {
-					LOGGER.debug("Campo {} tiene valor {}", i, linea);
-					i++;
+				for (Map.Entry<Class<?>, Map<Integer, String>> entry : nombresPropiedades.entrySet()) {
+					Class<?> clase = entry.getKey();
+					Map<Integer, String> nombresPropiedadesPorIndice = entry.getValue();
+					// XXX:
+					// https://stackoverflow.com/questions/46393863/what-to-use-instead-of-class-newinstance
+					Serializable instancia = (Serializable) clase.getDeclaredConstructor().newInstance();
+					for (Map.Entry<Integer, String> entry1 : nombresPropiedadesPorIndice.entrySet()) {
+						Integer indice = entry1.getKey();
+						String nombrePropiedad = entry1.getValue();
+
+						Field propiedad = clase.getDeclaredField(nombrePropiedad);
+						Class<?> tipoPropiedad = propiedad.getType();
+						String valorPropiedad = line[indice];
+						if (Objects.equals(tipoPropiedad, Double.class)) {
+							propiedad.setDouble(instancia, Double.parseDouble(valorPropiedad));
+						} else {
+							if (Objects.equals(tipoPropiedad, Date.class)) {
+								// XXX: https://www.mkyong.com/java8/java-8-how-to-convert-string-to-localdate/
+								LocalDate localDate = LocalDate.parse(valorPropiedad);
+								Date fecha = java.util.Date
+										.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+								propiedad.set(instancia, fecha);
+							} else {
+								propiedad.set(instancia, valorPropiedad);
+							}
+						}
+					}
 				}
-//				System.out.println("Country [id= " + line[0] + ", code= " + line[1] + " , name=" + line[2] + "]");
 			}
 		} catch (IllegalStateException | IOException e1) {
 			LOGGER.error("No se pudo leer archivo {}, la razon {}", file.getOriginalFilename(),
