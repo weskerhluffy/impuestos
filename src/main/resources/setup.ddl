@@ -2,6 +2,8 @@ DROP TABLE IF EXISTS factura cascade;
 CREATE TABLE factura(
  id serial PRIMARY KEY,
  rfc_emisor VARCHAR (50) NOT NULL,
+ razon_social_emisor text NOT NULL,
+ descripcion text NOT NULL,
  folio VARCHAR (100) NOT NULL,
  periodo date not null,
  fecha_creacion timestamp not null default CURRENT_DATE,
@@ -98,7 +100,9 @@ AS
          , 
          Date_part('month', f.periodo)
          AS mes,
-         f.periodo
+         f.periodo,
+         f.razon_social_emisor,
+         f.descripcion
   FROM   factura f 
          INNER JOIN monto_factura_vigente m 
                  ON f.id = m.id_factura 

@@ -79,13 +79,22 @@ public class FacturasPeriodoController {
 		var facturasDepreciadas = facturaVigenteDAO.findFacturasDepreciadas(periodo);
 		var montoDepreciacionAnualPorFacturaId = new HashMap<String, Double>();
 		for (FacturaVigente facturaVigente : facturasDepreciadas) {
-			// XXX: https://learn2program.wordpress.com/2008/07/23/how-to-use-int-as-the-key-of-a-map-to-display-in-freemarker/
+			// XXX:
+			// https://learn2program.wordpress.com/2008/07/23/how-to-use-int-as-the-key-of-a-map-to-display-in-freemarker/
 			montoDepreciacionAnualPorFacturaId.put(facturaVigente.getId().toString(),
 					calculaMontoDepreciacionMensual(facturaVigente));
 		}
+		// XXX:
+		// https://stackoverflow.com/questions/41240414/equivalent-of-scalas-foldleft-in-java-8
+		Double sumaNoDepreciadas = facturasNoDepreciadas.stream().map(FacturaVigente::getMonto).reduce(0.0,
+				(acc, c) -> acc + c);
+		Double sumaDepreciadas = facturasDepreciadas.stream().map(f -> calculaMontoDepreciacionMensual(f)).reduce(0.0,
+				(acc, c) -> acc + c);
 		params.put("montoDepreciacionAnualPorFacturaId", montoDepreciacionAnualPorFacturaId);
 		params.put("facturasNoDepreciadas", facturasNoDepreciadas);
 		params.put("facturasDepreciadas", facturasDepreciadas);
+		params.put("sumaNoDepreciadas", sumaNoDepreciadas);
+		params.put("sumaDepreciadas", sumaDepreciadas);
 
 		return new ModelAndView("tabla_gastos", params);
 	}
@@ -107,9 +116,9 @@ public class FacturasPeriodoController {
 		// XXX:
 		// https://stackoverflow.com/questions/2625546/is-using-the-class-instance-as-a-map-key-a-best-practice
 		Map<Class<?>, Map<Integer, String>> nombresPropiedades = Map.of(Factura.class,
-				Map.of(0, "periodo", 1, "folio", 3, "rfcEmisor"), MontoFactura.class, Map.of(5, "monto"),
-				FechaInicioDepreciacionFactura.class, Map.of(9, "fecha"), PorcentajeDepreciacionAnualFactura.class,
-				Map.of(8, "porcentaje"));
+				Map.of(0, "periodo", 1, "folio", 2, "descripcion", 3, "rfcEmisor", 4, "razonSocialEmisor"),
+				MontoFactura.class, Map.of(5, "monto"), FechaInicioDepreciacionFactura.class, Map.of(9, "fecha"),
+				PorcentajeDepreciacionAnualFactura.class, Map.of(8, "porcentaje"));
 		// XXX:
 		// https://stackoverflow.com/questions/24339990/how-to-convert-a-multipart-file-to-file
 		var convFile = new File(System.getProperty("java.io.tmpdir") + "/" + file.getOriginalFilename());
