@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.AbstractMap;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -19,8 +21,10 @@ import java.util.Objects;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.xmlbeans.XmlException;
 import org.nada.dao.FacturaVigenteDAO;
 import org.nada.models.Factura;
 import org.nada.models.FacturaVigente;
@@ -39,13 +43,24 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.w3c.dom.Node;
 
 import com.opencsv.CSVReader;
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.Converter;
+import com.thoughtworks.xstream.converters.MarshallingContext;
+import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
+import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+
+import mx.gob.sat.cfd.x3.ComprobanteDocument;
 
 // XXX: http://zetcode.com/springboot/controller/
 @Controller
 public class FacturasPeriodoController {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FacturasPeriodoController.class);
+	public static final String UPLOADING_DIR = System.getProperty("user.dir") + "/uploadingDir/";
+
 	private FacturaVigenteDAO facturaVigenteDAO;
 	private EntityManager entityManager;
 
@@ -224,4 +239,101 @@ public class FacturasPeriodoController {
 		return monto;
 	}
 
+	// @formatter:off
+	// XXX: https://hellokoding.com/uploading-multiple-files-example-with-spring-boot/
+	// @formatter:on
+	@GetMapping("/subeXml")
+	public ModelAndView uploading() {
+		File file = new File(UPLOADING_DIR);
+		var params = new HashMap<String, Object>();
+
+		params.put("kha", "NOOO");
+		params.put("files", file.listFiles());
+
+		return new ModelAndView("uploading", params);
+	}
+
+	@PostMapping(value = "/subeXml")
+	public String uploadingPost(@RequestParam("uploadingFiles") MultipartFile[] uploadingFiles) throws IOException {
+		for (MultipartFile uploadedFile : uploadingFiles) {
+			File file = new File(UPLOADING_DIR + uploadedFile.getOriginalFilename());
+			// XXX: https://www.baeldung.com/java-how-to-create-a-file
+			FileUtils.touch(file);
+			LOGGER.debug("TMPH arch temp {} existe {}", file, Files.exists(file.toPath()));
+			uploadedFile.transferTo(file);
+
+			ComprobanteDocument comprobanteDocument = null;
+			try {
+				comprobanteDocument = ComprobanteDocument.Factory.parse(file);
+			} catch (XmlException e) {
+				LOGGER.error("No se pudo parsear {} error {}", file, ExceptionUtils.getStackTrace(e));
+			}
+
+			if (comprobanteDocument != null) {
+
+				var atributos = comprobanteDocument.getComprobante().getEmisor().getDomNode().getAttributes();
+				var numeroAtributos = atributos.getLength();
+				for (Integer i = 0; i < numeroAtributos; i++) {
+					var atributo = atributos.item(i);
+					LOGGER.debug("TMPH el echizo {}:{}", atributo.getNodeName(), atributo.getNodeValue());
+				}
+
+				var complemento = comprobanteDocument.getComprobante().getComplemento();
+				var numeroHijosComplemento = complemento.getDomNode().getChildNodes().getLength();
+				Node timbre = null;
+				for (int i = 0; i < numeroHijosComplemento; i++) {
+					var hijo = complemento.getDomNode().getChildNodes().item(i);
+					LOGGER.debug("TMPH nombre {}", hijo.getNodeName());
+					if (StringUtils.equals("tfd:TimbreFiscalDigital", hijo.getNodeName())) {
+						timbre = hijo;
+					}
+				}
+				var folio = timbre.getAttributes().getNamedItem("UUID");
+				LOGGER.debug("TMPH el timbre {}:{}", folio.getNodeName(), folio.getNodeValue());
+			}
+
+		}
+
+		return "redirect:/subeXml";
+	}
+
+	public static class MapEntryConverter implements Converter {
+
+		public boolean canConvert(Class clazz) {
+			return AbstractMap.class.isAssignableFrom(clazz);
+		}
+
+		public void marshal(Object value, HierarchicalStreamWriter writer, MarshallingContext context) {
+
+			AbstractMap map = (AbstractMap) value;
+			for (Object obj : map.entrySet()) {
+				Map.Entry entry = (Map.Entry) obj;
+				writer.startNode(entry.getKey().toString());
+				Object val = entry.getValue();
+				if (null != val) {
+					writer.setValue(val.toString());
+				}
+				writer.endNode();
+			}
+
+		}
+
+		public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
+
+			Map<String, String> map = new HashMap<String, String>();
+
+			while (reader.hasMoreChildren()) {
+				reader.moveDown();
+
+				String key = reader.getNodeName(); // nodeName aka element's name
+				String value = reader.getValue();
+				map.put(key, value);
+
+				reader.moveUp();
+			}
+
+			return map;
+		}
+
+	}
 }
