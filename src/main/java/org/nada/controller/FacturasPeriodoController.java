@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +45,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.w3c.dom.Node;
+import java.util.stream.*;
 
 import com.opencsv.CSVReader;
 import com.thoughtworks.xstream.XStream;
@@ -300,7 +302,19 @@ public class FacturasPeriodoController {
 					LOGGER.debug("TMPH elc oncep {}:{}", atributosConcepto.getNamedItem("Descripcion").getNodeValue(),
 							atributosConcepto.getNamedItem("Importe").getNodeValue());
 				}
+				var descripcion = String.join(";;;",
+						Arrays.stream(conceptos.getConceptoArray())
+								.map(c -> String.format("%s->%s",
+										c.getDomNode().getAttributes().getNamedItem("Descripcion").getNodeValue(),
+										c.getDomNode().getAttributes().getNamedItem("Importe").getNodeValue()))
+								.collect(Collectors.toUnmodifiableList()));
 
+				LOGGER.debug("TMPH la descripcion global {}", descripcion);
+
+				var sumaConceptos = Arrays.stream(conceptos.getConceptoArray())
+						.map(c -> c.getDomNode().getAttributes().getNamedItem("Importe").getNodeValue())
+						.collect(Collectors.summingDouble(i -> Double.valueOf(i)));
+				LOGGER.debug("TMPH la suma de todos los males {}", sumaConceptos);
 			}
 
 		}
