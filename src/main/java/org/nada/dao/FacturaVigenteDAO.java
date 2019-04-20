@@ -20,4 +20,6 @@ public interface FacturaVigenteDAO extends CrudRepository<FacturaVigente, Intege
 	@Query(value = "SELECT f.*  FROM factura_vigente f where Mesdif(:periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) > 0 or f.fecha_inicio_depreciacion=:periodo", nativeQuery = true)
 //    @Query(value = `SELECT u.* FROM Users u WHERE u.status = :periodo AND u.name = :periodo`, nativeQuery = true)
 	public List<FacturaVigente> findFacturasDepreciadas(@Param("periodo") Date periodo);
+
+	public List<FacturaVigente> findByAnoAndMes(Double ano, Double mes);
 }

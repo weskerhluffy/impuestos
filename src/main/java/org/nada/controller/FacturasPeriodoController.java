@@ -13,7 +13,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -351,6 +353,31 @@ public class FacturasPeriodoController {
 		}
 
 		return "redirect:/subeXml";
+	}
+
+	@GetMapping(value = "/modificaDepreciacion")
+	public ModelAndView modificaDepreciacion(
+			@RequestParam("periodo") @DateTimeFormat(pattern = "yyyy-MM-dd") Date periodo) {
+		// @formatter:off
+		// XXX: https://stackoverflow.com/questions/9474121/i-want-to-get-year-month-day-etc-from-java-date-to-compare-with-gregorian-cal/32363174#32363174
+		// @formatter:on
+		LocalDate localDate = periodo.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		Integer year = localDate.getYear();
+		Integer month = localDate.getMonthValue();
+		var facturas = facturaVigenteDAO.findByAnoAndMes(year * 1.0, month * 1.0);
+		var params = new HashMap<String, Object>();
+		params.put("facturas", facturas);
+		params.put("periodo", periodo);
+		LOGGER.debug("TMPH ano {} mes {} facs {}", year, month, facturas);
+		return new ModelAndView("modifica_montos", params);
+	}
+
+	@PostMapping(value = "/modificaDepreciacion")
+	public String actualizaDepreciacion(FacturaContainer facturaContainer,
+			@DateTimeFormat(pattern = "yyyy-MM-dd") Date periodo) {
+		LOGGER.debug("TMPH AAAA {}",periodo);
+		LOGGER.debug("TMPH las facts {}", facturaContainer);
+		return "redirect:/modificaDepreciacion?periodo=" + FORMATEADOR_FECHA.format(periodo);
 	}
 
 }
