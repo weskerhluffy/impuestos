@@ -13,9 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +23,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
-import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;

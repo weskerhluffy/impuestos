@@ -50,12 +50,13 @@ td {
 					<td>${factura.razonSocialEmisor}</td>
 					<td>${factura.descripcion}</td>
 					<td>${factura.folio}</td>
+					<!-- XXX: https://stackoverflow.com/questions/30130140/freemarker-is-there-a-way-to-format-an-integer-as-a-floating-point-number -->
 					<td class="numerico"><input class="numerico" type="text"
 						name="facturas[${factura?index}].monto" size="20"
-						value="${factura.monto}" /></td>
+						value="${factura.monto?string(",##0.0;; decimalSeparator='.' groupingSeparator=' '")}" /></td>
 					<td class="numerico"><input class="numerico" type="text"
 						name="facturas[${factura?index}].porcentaje" size="20"
-						value="${factura.porcentaje!''}" /></td>
+						value="${(factura.porcentaje?string.percent)!''}" /></td>
 					<td><input type="text"
 						name="facturas[${factura?index}].fechaInicioDepreciacion"
 						value="${(factura.fechaInicioDepreciacion?string["yyyy-MM-dd"])!''}" />
