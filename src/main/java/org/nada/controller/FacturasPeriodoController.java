@@ -7,26 +7,31 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.xmlbeans.XmlException;
+import org.nada.dao.FacturaDAO;
 import org.nada.dao.FacturaVigenteDAO;
+import org.nada.dao.MontoFacturaDAO;
 import org.nada.models.Factura;
 import org.nada.models.FacturaVigente;
 import org.nada.models.FechaInicioDepreciacionFactura;
@@ -44,16 +49,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Node;
-import java.util.stream.*;
 
 import com.opencsv.CSVReader;
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.converters.Converter;
-import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
-import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 import mx.gob.sat.cfd.x3.ComprobanteDocument;
 import mx.gob.sat.cfd.x3.ComprobanteDocument.Comprobante.Conceptos.Concepto;
@@ -62,15 +61,21 @@ import mx.gob.sat.cfd.x3.ComprobanteDocument.Comprobante.Conceptos.Concepto;
 @Controller
 public class FacturasPeriodoController {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FacturasPeriodoController.class);
-	public static final String UPLOADING_DIR = System.getProperty("user.dir") + "/uploadingDir/";
+	private static final String UPLOADING_DIR = System.getProperty("user.dir") + "/uploadingDir/";
+	private static final SimpleDateFormat FORMATEADOR_FECHA = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
-	private FacturaVigenteDAO facturaVigenteDAO;
-	private EntityManager entityManager;
+	private final FacturaVigenteDAO facturaVigenteDAO;
+	private final EntityManager entityManager;
+	private final FacturaDAO facturaDAO;
+	private final MontoFacturaDAO montoFacturaDAO;
 
 	@Autowired
-	public FacturasPeriodoController(FacturaVigenteDAO facturaVigenteDAO, EntityManager entityManager) {
+	public FacturasPeriodoController(FacturaVigenteDAO facturaVigenteDAO, EntityManager entityManager,
+			FacturaDAO facturaDAO, MontoFacturaDAO montoFacturaDAO) {
 		this.facturaVigenteDAO = facturaVigenteDAO;
 		this.entityManager = entityManager;
+		this.facturaDAO = facturaDAO;
+		this.montoFacturaDAO = montoFacturaDAO;
 	}
 
 	@RequestMapping(value = "/getDateAndTime")
@@ -256,8 +261,11 @@ public class FacturasPeriodoController {
 		return new ModelAndView("uploading", params);
 	}
 
+	@Transactional
 	@PostMapping(value = "/subeXml")
-	public String uploadingPost(@RequestParam("uploadingFiles") MultipartFile[] uploadingFiles) throws IOException {
+	public String uploadingPost(@RequestParam("uploadingFiles") MultipartFile[] uploadingFiles)
+			throws IOException, DOMException, ParseException {
+		Date ahora = new Date();
 		for (MultipartFile uploadedFile : uploadingFiles) {
 			File file = new File(UPLOADING_DIR + uploadedFile.getOriginalFilename());
 			// XXX: https://www.baeldung.com/java-how-to-create-a-file
@@ -280,6 +288,8 @@ public class FacturasPeriodoController {
 					var atributo = atributos.item(i);
 					LOGGER.debug("TMPH el echizo {}:{}", atributo.getNodeName(), atributo.getNodeValue());
 				}
+				var rfc = atributos.getNamedItem("Rfc").getNodeValue();
+				var razonSocial = atributos.getNamedItem("Nombre").getNodeValue();
 
 				var complemento = comprobanteDocument.getComprobante().getComplemento();
 				var numeroHijosComplemento = complemento.getDomNode().getChildNodes().getLength();
@@ -291,10 +301,11 @@ public class FacturasPeriodoController {
 						timbre = hijo;
 					}
 				}
-				var folio = timbre.getAttributes().getNamedItem("UUID");
-				LOGGER.debug("TMPH el timbre {}:{}", folio.getNodeName(), folio.getNodeValue());
-				var periodo = timbre.getAttributes().getNamedItem("FechaTimbrado");
-				LOGGER.debug("TMPH la fecha {}:{}", periodo.getNodeName(), periodo.getNodeValue());
+				var folio = timbre.getAttributes().getNamedItem("UUID").getNodeValue();
+//				LOGGER.debug("TMPH el timbre {}:{}", folio.getNodeName(), folio.getNodeValue());
+				var periodo = FORMATEADOR_FECHA
+						.parse(timbre.getAttributes().getNamedItem("FechaTimbrado").getNodeValue());
+//				LOGGER.debug("TMPH la fecha {}:{}", periodo.getNodeName(), periodo.getNodeValue());
 
 				var conceptos = comprobanteDocument.getComprobante().getConceptos();
 				for (Concepto concepto : conceptos.getConceptoArray()) {
@@ -311,10 +322,30 @@ public class FacturasPeriodoController {
 
 				LOGGER.debug("TMPH la descripcion global {}", descripcion);
 
-				var sumaConceptos = Arrays.stream(conceptos.getConceptoArray())
+				var monto = Arrays.stream(conceptos.getConceptoArray())
 						.map(c -> c.getDomNode().getAttributes().getNamedItem("Importe").getNodeValue())
 						.collect(Collectors.summingDouble(i -> Double.valueOf(i)));
-				LOGGER.debug("TMPH la suma de todos los males {}", sumaConceptos);
+				LOGGER.debug("TMPH la suma de todos los males {}", monto);
+
+				Factura factura = null;
+				try {
+					if ((factura = facturaDAO.findByRfcEmisorAndFolio(rfc, folio)) == null) {
+						factura = new Factura(rfc, razonSocial, descripcion, folio, periodo, ahora, ahora);
+						LOGGER.debug("TMPH factura nueva kedo {}", factura);
+						factura = facturaDAO.save(factura);
+						MontoFactura montoFactura = new MontoFactura(factura, monto, ahora);
+						montoFactura = montoFacturaDAO.save(montoFactura);
+						LOGGER.debug("TMPH se dio de alta monto {}", montoFactura);
+
+					} else {
+						LOGGER.debug("factura {} ya existia", factura);
+					}
+
+				} catch (RuntimeException e) {
+					// XXX:
+					// https://stackoverflow.com/questions/40301779/how-to-handle-a-psqlexception-in-java
+					LOGGER.error("Factura {} ya esta dada de alta {}", factura, ExceptionUtils.getStackTrace(e));
+				}
 			}
 
 		}
@@ -322,43 +353,4 @@ public class FacturasPeriodoController {
 		return "redirect:/subeXml";
 	}
 
-	public static class MapEntryConverter implements Converter {
-
-		public boolean canConvert(Class clazz) {
-			return AbstractMap.class.isAssignableFrom(clazz);
-		}
-
-		public void marshal(Object value, HierarchicalStreamWriter writer, MarshallingContext context) {
-
-			AbstractMap map = (AbstractMap) value;
-			for (Object obj : map.entrySet()) {
-				Map.Entry entry = (Map.Entry) obj;
-				writer.startNode(entry.getKey().toString());
-				Object val = entry.getValue();
-				if (null != val) {
-					writer.setValue(val.toString());
-				}
-				writer.endNode();
-			}
-
-		}
-
-		public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
-
-			Map<String, String> map = new HashMap<String, String>();
-
-			while (reader.hasMoreChildren()) {
-				reader.moveDown();
-
-				String key = reader.getNodeName(); // nodeName aka element's name
-				String value = reader.getValue();
-				map.put(key, value);
-
-				reader.moveUp();
-			}
-
-			return map;
-		}
-
-	}
 }
