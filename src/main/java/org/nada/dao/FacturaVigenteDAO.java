@@ -13,13 +13,15 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface FacturaVigenteDAO extends CrudRepository<FacturaVigente, Integer>, FacturaVigenteDAOCustom {
 
-	// XXX:
-	// https://stackoverflow.com/questions/878573/java-multiline-string?page=2&tab=votes
+	// @formatter:off
+	// XXX: https://stackoverflow.com/questions/878573/java-multiline-string?page=2&tab=votes
+    // @formatter:on
 //	@Query(select f from FacturaVigente f)
 
-	@Query(value = "SELECT f.*  FROM factura_vigente f where Mesdif(:periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) > 0 or f.fecha_inicio_depreciacion=:periodo", nativeQuery = true)
+	// TODO: Filtrar facturas que ya se depreciaron del todo
+	@Query(value = "SELECT f.*  FROM factura_vigente f where Mesdif(:periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) > 0 or mismo_periodo(f.fecha_inicio_depreciacion,:periodo) order by f.periodo", nativeQuery = true)
 //    @Query(value = `SELECT u.* FROM Users u WHERE u.status = :periodo AND u.name = :periodo`, nativeQuery = true)
 	public List<FacturaVigente> findFacturasDepreciadas(@Param("periodo") Date periodo);
 
-	public List<FacturaVigente> findByAnoAndMes(Double ano, Double mes);
+	public List<FacturaVigente> findByAnoAndMesOrderByPeriodo(Double ano, Double mes);
 }

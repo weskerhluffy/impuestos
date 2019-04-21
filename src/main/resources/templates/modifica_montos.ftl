@@ -56,7 +56,7 @@ td {
 						value="${factura.monto?string(",##0.0;; decimalSeparator='.' groupingSeparator=' '")}" /></td>
 					<td class="numerico"><input class="numerico" type="text"
 						name="facturas[${factura?index}].porcentaje" size="20"
-						value="${(factura.porcentaje?string.percent)!''}" /></td>
+						value="${(factura.porcentaje?string(",##0.0;; decimalSeparator='.' groupingSeparator=' '"))!''}" /></td>
 					<td><input type="text"
 						name="facturas[${factura?index}].fechaInicioDepreciacion"
 						value="${(factura.fechaInicioDepreciacion?string["yyyy-MM-dd"])!''}" />

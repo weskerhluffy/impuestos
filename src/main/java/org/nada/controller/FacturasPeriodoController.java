@@ -34,6 +34,7 @@ import org.nada.dao.MontoFacturaDAO;
 import org.nada.models.Factura;
 import org.nada.models.FacturaVigente;
 import org.nada.models.FechaInicioDepreciacionFactura;
+import org.nada.models.MontoDeducibleFactura;
 import org.nada.models.MontoFactura;
 import org.nada.models.PorcentajeDepreciacionAnualFactura;
 import org.slf4j.Logger;
@@ -197,10 +198,15 @@ public class FacturasPeriodoController {
 
 				Factura factura = (Factura) instanciasDeLinea.get(Factura.class);
 				Date fechaActual = new Date();
-				factura.setFechaCreacion(fechaActual);
-				factura.setFechaUltimaModificacion(fechaActual);
-				entityManager.persist(factura);
-				entityManager.flush();
+				Factura facturaSalvada = facturaDAO.findByRfcEmisorAndFolio(factura.getRfcEmisor(), factura.getFolio());
+				if (facturaSalvada != null) {
+					factura = facturaSalvada;
+				} else {
+					factura.setFechaCreacion(fechaActual);
+					factura.setFechaUltimaModificacion(fechaActual);
+					entityManager.persist(factura);
+					entityManager.flush();
+				}
 				LOGGER.debug("TMPH factura guardada {}", factura);
 				for (Map.Entry<Class<?>, Serializable> entry : instanciasDeLinea.entrySet()) {
 					Class<?> clase = entry.getKey();
@@ -361,7 +367,7 @@ public class FacturasPeriodoController {
 		LocalDate localDate = periodo.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 		Integer year = localDate.getYear();
 		Integer month = localDate.getMonthValue();
-		var facturas = facturaVigenteDAO.findByAnoAndMes(year * 1.0, month * 1.0);
+		var facturas = facturaVigenteDAO.findByAnoAndMesOrderByPeriodo(year * 1.0, month * 1.0);
 		var params = new HashMap<String, Object>();
 		params.put("facturas", facturas);
 		params.put("periodo", periodo);
@@ -369,11 +375,37 @@ public class FacturasPeriodoController {
 		return new ModelAndView("modifica_montos", params);
 	}
 
+	@Transactional
 	@PostMapping(value = "/modificaDepreciacion")
 	public String actualizaDepreciacion(FacturaContainer facturaContainer,
 			@DateTimeFormat(pattern = "yyyy-MM-dd") Date periodo) {
-		LOGGER.debug("TMPH AAAA {}",periodo);
-		LOGGER.debug("TMPH las facts {}", facturaContainer);
+		Date tiempoCreacion = new Date();
+		LOGGER.debug("TMPH AAAA {}", periodo);
+		for (FacturaVigente facturaVigente : facturaContainer.getFacturas()) {
+			Factura factura = facturaDAO.findById(facturaVigente.getId()).get();
+			LOGGER.debug("TMPH procesando fact {}", facturaVigente);
+			if ((facturaVigente.getPorcentaje() != null) != (facturaVigente.getFechaInicioDepreciacion() != null)) {
+				throw new RuntimeException(String.format("factura %s tiene datos erroneos", facturaVigente));
+			}
+			if (facturaVigente.getPorcentaje() != null) {
+				PorcentajeDepreciacionAnualFactura porcentajeDepreciacionAnualFactura = new PorcentajeDepreciacionAnualFactura(
+						factura, facturaVigente.getPorcentaje(), tiempoCreacion);
+				FechaInicioDepreciacionFactura fechaInicioDepreciacionFactura = new FechaInicioDepreciacionFactura(
+						factura, facturaVigente.getFechaInicioDepreciacion(), tiempoCreacion);
+				LOGGER.debug("TMPH guardando datos dep {}", porcentajeDepreciacionAnualFactura,
+						fechaInicioDepreciacionFactura);
+				entityManager.persist(porcentajeDepreciacionAnualFactura);
+				entityManager.persist(fechaInicioDepreciacionFactura);
+				entityManager.flush();
+			}
+			FacturaVigente facturaVigente2 = facturaVigenteDAO.findById(facturaVigente.getId()).get();
+			if (facturaVigente.getMonto() != facturaVigente2.getMonto()) {
+				MontoDeducibleFactura montoDeducibleFactura = new MontoDeducibleFactura(factura,
+						facturaVigente.getMonto(), tiempoCreacion);
+				LOGGER.debug("TMPH guardando datos monto {}", montoDeducibleFactura);
+				entityManager.persist(montoDeducibleFactura);
+			}
+		}
 		return "redirect:/modificaDepreciacion?periodo=" + FORMATEADOR_FECHA.format(periodo);
 	}
 
