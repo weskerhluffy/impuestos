@@ -19,7 +19,7 @@ public interface FacturaVigenteDAO extends CrudRepository<FacturaVigente, Intege
 //	@Query(select f from FacturaVigente f)
 
 	// TODO: Filtrar facturas que ya se depreciaron del todo
-	@Query(value = "SELECT f.*  FROM factura_vigente f where Mesdif(:periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) > 0 or mismo_periodo(f.fecha_inicio_depreciacion,:periodo) order by f.periodo", nativeQuery = true)
+	@Query(value = "SELECT f.* FROM   factura_vigente f WHERE  ( Mesdif(:periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) > 0 OR Mismo_periodo(f.fecha_inicio_depreciacion, date('2019-01-01')) ) AND ( ( ( f.monto * ( Coalesce(f.porcentaje, 0) / 100 ) ) / 12 ) + 0.005 ) * Mesdif( :periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) < f.monto ORDER  BY f.periodo", nativeQuery = true)
 //    @Query(value = `SELECT u.* FROM Users u WHERE u.status = :periodo AND u.name = :periodo`, nativeQuery = true)
 	public List<FacturaVigente> findFacturasDepreciadas(@Param("periodo") Date periodo);
 

@@ -123,15 +123,16 @@ CREATE FUNCTION mesdif(fecha1 date, fecha2 date) RETURNS integer AS $$
  END; $$
  LANGUAGE PLPGSQL;  
                    
-   SELECT f.*, 
+SELECT f.*, 
          ( ( ( f.monto * ( Coalesce(f.porcentaje, 0) / 100 ) ) / 
              12 
            ) + 
            0.005 ) * Mesdif(Date('2020-01-01'), Coalesce(f.fecha, Date('2020-01-01'))) AS 
          monto_depreciado 
   FROM   factura_vigente f 
-                  where Mesdif(Date('2020-01-01'), Coalesce(f.fecha, Date('2020-01-01'))) > 0;                   
+                  where Mesdif(Date('2020-01-01'), Coalesce(f.fecha, Date('2020-01-01'))) > 0;
                  
+
 -- TODO: Trigger para guardar actualizaciones pendientes de declaraciones cuando haya nuevos vigentes.
 
 drop table if exists declaracion cascade;
@@ -160,4 +161,17 @@ CREATE TABLE factura_declarada(
 
 -- XXX: http://www.postgresqltutorial.com/postgresql-create-function/
 -- XXX: http://www.sqlines.com/postgresql/how-to/datediff
+SELECT f.* 
+FROM   factura_vigente f 
+WHERE  ( Mesdif(Date('2019-01-01'), Coalesce(f.fecha_inicio_depreciacion, Date('2019-01-01'))) > 0 
+          OR Mismo_periodo(f.fecha_inicio_depreciacion, date('2019-01-01')) ) 
+       AND ( ( ( f.monto * ( Coalesce(f.porcentaje, 0) / 100 ) ) / 12 ) + 0.005 
+           ) * Mesdif( 
+               Date('2019-01-01'), Coalesce(f.fecha_inicio_depreciacion, 
+           Date('2019-01-01'))) < f.monto 
+ORDER  BY f.periodo 
  
+
+SELECT f.* FROM   factura_vigente f WHERE  ( Mesdif(:periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) > 0 OR Mismo_periodo(f.fecha_inicio_depreciacion, date('2019-01-01')) ) AND ( ( ( f.monto * ( Coalesce(f.porcentaje, 0) / 100 ) ) / 12 ) + 0.005 ) * Mesdif( :periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) < f.monto ORDER  BY f.periodo 
+
+update factura set descripcion='IVA acreditable', folio='83' where id=121;

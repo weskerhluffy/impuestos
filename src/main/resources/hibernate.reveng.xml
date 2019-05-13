@@ -36,6 +36,7 @@
 		<meta attribute="extra-import">java.util.stream.Collectors</meta>
 		<meta attribute="extra-import">java.util.List</meta>
 		<meta attribute="extra-import">javax.persistence.Transient</meta>
+		<meta attribute="extra-import">org.apache.commons.lang3.builder.ToStringBuilder</meta>
 
 
 		<meta attribute="class-code">

@@ -9,10 +9,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -105,14 +108,14 @@ public class FacturasPeriodoController {
 			// XXX:
 			// https://learn2program.wordpress.com/2008/07/23/how-to-use-int-as-the-key-of-a-map-to-display-in-freemarker/
 			montoDepreciacionAnualPorFacturaId.put(facturaVigente.getId().toString(),
-					calculaMontoDepreciacionMensual(facturaVigente));
+					calculaMontoDepreciacionMensual(facturaVigente, periodo));
 		}
 		// XXX:
 		// https://stackoverflow.com/questions/41240414/equivalent-of-scalas-foldleft-in-java-8
 		Double sumaNoDepreciadas = facturasNoDepreciadas.stream().map(FacturaVigente::getMonto).reduce(0.0,
 				(acc, c) -> acc + c);
-		Double sumaDepreciadas = facturasDepreciadas.stream().map(f -> calculaMontoDepreciacionMensual(f)).reduce(0.0,
-				(acc, c) -> acc + c);
+		Double sumaDepreciadas = facturasDepreciadas.stream().map(f -> calculaMontoDepreciacionMensual(f, periodo))
+				.reduce(0.0, (acc, c) -> acc + c);
 		params.put("montoDepreciacionAnualPorFacturaId", montoDepreciacionAnualPorFacturaId);
 		params.put("facturasNoDepreciadas", facturasNoDepreciadas);
 		params.put("facturasDepreciadas", facturasDepreciadas);
@@ -245,11 +248,31 @@ public class FacturasPeriodoController {
 	}
 
 	// TODO: Mover a modelo
-	private Double calculaMontoDepreciacionMensual(FacturaVigente facturaVigente) {
+	private Double calculaMontoDepreciacionMensual(FacturaVigente facturaVigente, Date periodo) {
 		Double monto;
 		LOGGER.debug("TMPH calculando monto mensual {}", facturaVigente);
 		monto = (facturaVigente.getMonto() * (facturaVigente.getPorcentaje() / 1200));
-		return monto;
+		// @formatter:off
+		// XXX: https://stackoverflow.com/questions/9474121/i-want-to-get-year-month-day-etc-from-java-date-to-compare-with-gregorian-cal/32363174#32363174
+		// @formatter:on
+
+		LocalDate periodoLocalDate = periodo.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		var ano = periodoLocalDate.getYear();
+		LOGGER.debug("TMPH Ano de periodo {} es {}", ano, FORMATEADOR_FECHA.format(periodo));
+
+		LocalDate inicioAnoLocalDate = LocalDate.of(ano, 1, 1);
+		// @formatter:off
+		// XXX: https://stackoverflow.com/questions/23215299/how-to-convert-a-localdate-to-an-instant
+		// @formatter:on
+//		YearMonth inicioAnoYearMonth = YearMonth.from(Instant.from(inicioAnoLocalDate));
+
+		// @formatter:off
+		// XXX: https://stackoverflow.com/questions/1086396/java-date-month-difference/34811261#34811261
+		// @formatter:on
+		var mesesTranscurridosDelAno = ChronoUnit.MONTHS.between(inicioAnoLocalDate, periodoLocalDate);
+		LOGGER.debug("TMPH Meses entre {} y {} son {}", inicioAnoLocalDate, periodoLocalDate, mesesTranscurridosDelAno);
+
+		return monto * mesesTranscurridosDelAno;
 	}
 
 	// @formatter:off
