@@ -64,6 +64,7 @@ table, th, td {
 				<th>Fecha de inicio de depreciacion</th>
 				<th>Periodo inicial</th>
 				<th>Depreciacion mensual</th>
+				<th>Depreciacion mensual acumulada</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -78,8 +79,9 @@ table, th, td {
 				<td style="text-align: right;">${factura.porcentaje}</td>
 				<td style="text-align: right;">${factura.fechaInicioDepreciacion?string["yyyy-MM-dd"]}</td>
 				<td style="text-align: right;">${factura.periodo?string["yyyy-MM-dd"]}</td>
+				<td style="text-align: right;">${factura.montoDepreciacionMensual?string(",##0.00")}</td>
 				<!-- XXX: https://stackoverflow.com/questions/14821329/freemarker-and-hashmap-how-do-i-get-key-value -->
-				<td style="text-align: right;">${montoDepreciacionAnualPorFacturaId[factura.id?string]?string(",##0.00")}</td>
+				<td style="text-align: right;">${montoDepreciacionMensualAcumuladaPorFacturaId[factura.id?string]?string(",##0.00")}</td>
 			</tr>
 			</#items> <#else></#list>
 		</tbody>

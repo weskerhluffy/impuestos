@@ -41,7 +41,7 @@ public class FacturaVigenteDAOCustomImpl implements FacturaVigenteDAOCustom {
 		calendar.setTime(fecha);
 
 		Query q = entityManager.createNativeQuery(
-				"select f.* from factura_vigente f where f.ano=:ano and f.mes=:mes and f.porcentaje is null order by f.periodo",
+				"select f.*,0 as dtype from factura_vigente f where f.ano=:ano and f.mes=:mes and f.porcentaje is null order by f.periodo",
 				FacturaVigente.class);
 		// XXX: https://www.baeldung.com/java-year-month-day
 		q.setParameter("ano", calendar.get(Calendar.YEAR));

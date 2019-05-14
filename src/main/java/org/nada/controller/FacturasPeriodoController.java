@@ -36,6 +36,7 @@ import org.nada.dao.FacturaVigenteDAO;
 import org.nada.dao.MontoFacturaDAO;
 import org.nada.models.Factura;
 import org.nada.models.FacturaVigente;
+import org.nada.models.FacturaVigenteExtendida;
 import org.nada.models.FechaInicioDepreciacionFactura;
 import org.nada.models.MontoDeducibleFactura;
 import org.nada.models.MontoFactura;
@@ -102,21 +103,27 @@ public class FacturasPeriodoController {
 		var params = new HashMap<String, Object>();
 		params.put("periodo", periodo);
 		var facturasNoDepreciadas = facturaVigenteDAO.getFacturasSinDepreciacion(periodo);
-		var facturasDepreciadas = facturaVigenteDAO.findFacturasDepreciadas(periodo);
-		var montoDepreciacionAnualPorFacturaId = new HashMap<String, Double>();
-		for (FacturaVigente facturaVigente : facturasDepreciadas) {
-			// XXX:
-			// https://learn2program.wordpress.com/2008/07/23/how-to-use-int-as-the-key-of-a-map-to-display-in-freemarker/
-			montoDepreciacionAnualPorFacturaId.put(facturaVigente.getId().toString(),
-					calculaMontoDepreciacionMensual(facturaVigente, periodo));
+		var facturasDepreciadasOriginales = facturaVigenteDAO.findFacturasDepreciadas(periodo);
+		var facturasDepreciadas = facturasDepreciadasOriginales.stream().map(f -> new FacturaVigenteExtendida(f))
+				.collect(Collectors.toList());
+		var montoDepreciacionMensualAcumuladaPorFacturaId = new HashMap<String, Double>();
+		for (FacturaVigenteExtendida facturaVigente : facturasDepreciadas) {
+			// @formatter:off
+			// XXX: https://learn2program.wordpress.com/2008/07/23/how-to-use-int-as-the-key-of-a-map-to-display-in-freemarker/
+            // @formatter:on
+			LOGGER.debug("TMPH factura ext {}", facturaVigente);
+			montoDepreciacionMensualAcumuladaPorFacturaId.put(facturaVigente.getId().toString(),
+					calculaMontoDepreciacionAcumuladaMensual(facturaVigente, periodo));
 		}
-		// XXX:
-		// https://stackoverflow.com/questions/41240414/equivalent-of-scalas-foldleft-in-java-8
+		// @formatter:off
+		// XXX: https://stackoverflow.com/questions/41240414/equivalent-of-scalas-foldleft-in-java-8
+        // @formatter:on
 		Double sumaNoDepreciadas = facturasNoDepreciadas.stream().map(FacturaVigente::getMonto).reduce(0.0,
 				(acc, c) -> acc + c);
-		Double sumaDepreciadas = facturasDepreciadas.stream().map(f -> calculaMontoDepreciacionMensual(f, periodo))
+		Double sumaDepreciadas = facturasDepreciadas.stream()
+				.map(f -> calculaMontoDepreciacionAcumuladaMensual(new FacturaVigenteExtendida(f), periodo))
 				.reduce(0.0, (acc, c) -> acc + c);
-		params.put("montoDepreciacionAnualPorFacturaId", montoDepreciacionAnualPorFacturaId);
+		params.put("montoDepreciacionMensualAcumuladaPorFacturaId", montoDepreciacionMensualAcumuladaPorFacturaId);
 		params.put("facturasNoDepreciadas", facturasNoDepreciadas);
 		params.put("facturasDepreciadas", facturasDepreciadas);
 		params.put("sumaNoDepreciadas", sumaNoDepreciadas);
@@ -248,10 +255,8 @@ public class FacturasPeriodoController {
 	}
 
 	// TODO: Mover a modelo
-	private Double calculaMontoDepreciacionMensual(FacturaVigente facturaVigente, Date periodo) {
-		Double monto;
-		LOGGER.debug("TMPH calculando monto mensual {}", facturaVigente);
-		monto = (facturaVigente.getMonto() * (facturaVigente.getPorcentaje() / 1200));
+	private Double calculaMontoDepreciacionAcumuladaMensual(FacturaVigenteExtendida facturaVigente, Date periodo) {
+		Double monto = facturaVigente.getMontoDepreciacionMensual();
 		// @formatter:off
 		// XXX: https://stackoverflow.com/questions/9474121/i-want-to-get-year-month-day-etc-from-java-date-to-compare-with-gregorian-cal/32363174#32363174
 		// @formatter:on
