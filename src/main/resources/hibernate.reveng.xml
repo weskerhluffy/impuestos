@@ -31,6 +31,8 @@
 		match-name="factura" />
 	<table-filter match-schema="public"
 		match-name=".*_factura" />
+	<table-filter match-schema="public"
+		match-name="declaracion.*" />
 
 	<table schema="public" name="factura_vigente">
 		<meta attribute="extra-import">java.util.stream.Collectors</meta>
@@ -96,6 +98,12 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 		</primary-key>
 	</table>
 	<table schema="public" name="factura">
+		<primary-key>
+			<generator class="identity"></generator>
+			<key-column name="id" />
+		</primary-key>
+	</table>
+	<table schema="public" name="declaracion_vigente">
 		<primary-key>
 			<generator class="identity"></generator>
 			<key-column name="id" />

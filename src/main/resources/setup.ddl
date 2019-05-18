@@ -138,23 +138,31 @@ SELECT f.*,
 drop table if exists declaracion cascade;
 CREATE TABLE declaracion(
  id serial PRIMARY KEY,
- monto_egresos float not null,
- monto_ingresos float not null,
  periodo date not null,
- tiempo_creacion timestamp not null default CURRENT_DATE
+ tiempo_creacion timestamp default CURRENT_DATE
 );
 
-drop table if exists factura_declarada cascade;
-CREATE TABLE factura_declarada(
+drop table if exists declaracion_factura cascade;
+CREATE TABLE declaracion_factura (
  id serial PRIMARY KEY,
  id_factura INTEGER not null REFERENCES factura(id),
  id_monto INTEGER not null REFERENCES monto_factura(id),
- id_monto_deducible INTEGER not null REFERENCES monto_deducible_factura(id),
- id_porcentaje_depreciacion INTEGER not null REFERENCES porcentaje_depreciacion_anual_factura(id),
- id_fecha_inicio_depreciacion INTEGER not null REFERENCES fecha_inicio_depreciacion_factura(id),
+ id_monto_deducible INTEGER REFERENCES monto_deducible_factura(id),
+ id_porcentaje_depreciacion INTEGER REFERENCES porcentaje_depreciacion_anual_factura(id),
+ id_fecha_inicio_depreciacion INTEGER REFERENCES fecha_inicio_depreciacion_factura(id),
  id_declaracion INTEGER not null REFERENCES declaracion(id),
  tiempo_creacion timestamp not null default CURRENT_DATE
 );
+
+CREATE OR replace VIEW declaracion_vigente
+AS 
+  SELECT a.* 
+  FROM   (SELECT m.*, 
+                 Max(m.tiempo_creacion) 
+                   over ( 
+                     PARTITION BY m.periodo) AS ultimo_creado 
+          FROM declaracion m) AS a
+  WHERE  a.tiempo_creacion = a.ultimo_creado; 
 
 
 -- select date('2019-02-01')-INTERVAL '1 month'
