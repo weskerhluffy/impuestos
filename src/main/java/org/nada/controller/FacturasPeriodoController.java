@@ -16,6 +16,7 @@ import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,9 +32,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.xmlbeans.XmlException;
+import org.nada.dao.DeclaracionVigenteDAO;
 import org.nada.dao.FacturaDAO;
 import org.nada.dao.FacturaVigenteDAO;
 import org.nada.dao.MontoFacturaDAO;
+import org.nada.models.DeclaracionVigente;
 import org.nada.models.Factura;
 import org.nada.models.FacturaVigente;
 import org.nada.models.FacturaVigenteExtendida;
@@ -72,14 +75,16 @@ public class FacturasPeriodoController {
 	private final EntityManager entityManager;
 	private final FacturaDAO facturaDAO;
 	private final MontoFacturaDAO montoFacturaDAO;
+	private final DeclaracionVigenteDAO declaracionVigenteDAO;
 
 	@Autowired
 	public FacturasPeriodoController(FacturaVigenteDAO facturaVigenteDAO, EntityManager entityManager,
-			FacturaDAO facturaDAO, MontoFacturaDAO montoFacturaDAO) {
+			FacturaDAO facturaDAO, MontoFacturaDAO montoFacturaDAO, DeclaracionVigenteDAO declaracionVigenteDAO) {
 		this.facturaVigenteDAO = facturaVigenteDAO;
 		this.entityManager = entityManager;
 		this.facturaDAO = facturaDAO;
 		this.montoFacturaDAO = montoFacturaDAO;
+		this.declaracionVigenteDAO = declaracionVigenteDAO;
 	}
 
 	@RequestMapping(value = "/getDateAndTime")
@@ -129,6 +134,10 @@ public class FacturasPeriodoController {
 		params.put("facturasDepreciadas", facturasDepreciadas);
 		params.put("sumaNoDepreciadas", sumaNoDepreciadas);
 		params.put("sumaDepreciadas", sumaDepreciadas);
+
+		List<DeclaracionVigente> declaracionVigentes = new ArrayList<>();
+		declaracionVigenteDAO.findAll().forEach(declaracionVigentes::add);
+		LOGGER.debug("TMPH declaraciones vigentes {}", declaracionVigentes);
 
 		return new ModelAndView("tabla_gastos", params);
 	}

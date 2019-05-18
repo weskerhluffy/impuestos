@@ -1,5 +1,5 @@
 package org.nada.models;
-// Generated 18 may 2019 9:10:48 by Hibernate Tools 5.2.5.Final
+// Generated 18 may 2019 18:06:05 by Hibernate Tools 5.2.5.Final
 
 
 import java.util.Date;
@@ -35,11 +35,15 @@ public class FacturaVigente  implements java.io.Serializable {
      private Date periodo;
      private String razonSocialEmisor;
      private String descripcion;
+     private Integer idMonto;
+     private Integer idMontoDeducible;
+     private Integer idPorcentaje;
+     private Integer idFechaInicioDepreciacion;
 
     public FacturaVigente() {
     }
 
-    public FacturaVigente(String rfcEmisor, String folio, Double monto, Double porcentaje, Date fechaInicioDepreciacion, Double ano, Double mes, Date periodo, String razonSocialEmisor, String descripcion) {
+    public FacturaVigente(String rfcEmisor, String folio, Double monto, Double porcentaje, Date fechaInicioDepreciacion, Double ano, Double mes, Date periodo, String razonSocialEmisor, String descripcion, Integer idMonto, Integer idMontoDeducible, Integer idPorcentaje, Integer idFechaInicioDepreciacion) {
        this.rfcEmisor = rfcEmisor;
        this.folio = folio;
        this.monto = monto;
@@ -50,6 +54,10 @@ public class FacturaVigente  implements java.io.Serializable {
        this.periodo = periodo;
        this.razonSocialEmisor = razonSocialEmisor;
        this.descripcion = descripcion;
+       this.idMonto = idMonto;
+       this.idMontoDeducible = idMontoDeducible;
+       this.idPorcentaje = idPorcentaje;
+       this.idFechaInicioDepreciacion = idFechaInicioDepreciacion;
     }
    
      @Id @GeneratedValue(strategy=IDENTITY)
@@ -167,6 +175,46 @@ public class FacturaVigente  implements java.io.Serializable {
     
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    
+    @Column(name="id_monto")
+    public Integer getIdMonto() {
+        return this.idMonto;
+    }
+    
+    public void setIdMonto(Integer idMonto) {
+        this.idMonto = idMonto;
+    }
+
+    
+    @Column(name="id_monto_deducible")
+    public Integer getIdMontoDeducible() {
+        return this.idMontoDeducible;
+    }
+    
+    public void setIdMontoDeducible(Integer idMontoDeducible) {
+        this.idMontoDeducible = idMontoDeducible;
+    }
+
+    
+    @Column(name="id_porcentaje")
+    public Integer getIdPorcentaje() {
+        return this.idPorcentaje;
+    }
+    
+    public void setIdPorcentaje(Integer idPorcentaje) {
+        this.idPorcentaje = idPorcentaje;
+    }
+
+    
+    @Column(name="id_fecha_inicio_depreciacion")
+    public Integer getIdFechaInicioDepreciacion() {
+        return this.idFechaInicioDepreciacion;
+    }
+    
+    public void setIdFechaInicioDepreciacion(Integer idFechaInicioDepreciacion) {
+        this.idFechaInicioDepreciacion = idFechaInicioDepreciacion;
     }
 
 

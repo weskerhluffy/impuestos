@@ -1,5 +1,5 @@
 package org.nada.models;
-// Generated 18 may 2019 9:10:48 by Hibernate Tools 5.2.5.Final
+// Generated 18 may 2019 18:06:05 by Hibernate Tools 5.2.5.Final
 
 import java.util.Date;
 import javax.persistence.Column;
@@ -29,10 +29,9 @@ public class DeclaracionFactura implements java.io.Serializable {
 	private MontoFactura montoFactura;
 	private PorcentajeDepreciacionAnualFactura porcentajeDepreciacionAnualFactura;
 	private Date tiempoCreacion;
-	private DeclaracionVigente declaracionVigente;
 
+	private DeclaracionVigente declaracionVigente;
 	@ManyToOne(targetEntity = DeclaracionVigente.class)
-//	@JoinColumn(name = "id_declaracion", table = "declaracion_vigente", referencedColumnName = "id")
 	public DeclaracionVigente getDeclaracionVigente() {
 		return declaracionVigente;
 	}
