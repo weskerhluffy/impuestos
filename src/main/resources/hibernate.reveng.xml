@@ -105,6 +105,7 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 	</table>
 	<table schema="public" name="declaracion_vigente">
 
+		<meta attribute="extra-import">org.apache.commons.lang3.builder.ToStringBuilder</meta>
 		<meta attribute="class-code">
         <![CDATA[
 // Aca nomas probando controla la autodegeneracion con <<class-code >>
