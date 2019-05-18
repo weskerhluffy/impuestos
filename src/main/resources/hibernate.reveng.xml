@@ -60,12 +60,6 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 			</meta>
 		</column>
 	</table>
-	<table schema="public" name="factura_vigente">
-		<primary-key>
-			<generator class="identity"></generator>
-			<key-column name="id" />
-		</primary-key>
-	</table>
 	<table schema="public" name="monto_factura_vigente">
 		<primary-key>
 			<generator class="identity"></generator>
@@ -103,11 +97,33 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 			<key-column name="id" />
 		</primary-key>
 	</table>
-	<table schema="public" name="declaracion_vigente">
+	<table schema="public" name="declaracion_factura">
 		<primary-key>
 			<generator class="identity"></generator>
 			<key-column name="id" />
 		</primary-key>
+	</table>
+	<table schema="public" name="declaracion_vigente">
+
+		<meta attribute="class-code">
+        <![CDATA[
+// Aca nomas probando controla la autodegeneracion con <<class-code >>
+// TODO: https://stackoverflow.com/questions/2653268/what-are-the-shortcut-to-auto-generating-tostring-method-in-eclipse
+public String toString() { return ToStringBuilder.reflectionToString(this); }
+
+        ]]>
+		</meta>
+		<primary-key>
+			<generator class="identity"></generator>
+			<key-column name="id" />
+		</primary-key>
+		<column name="folio" type="string">
+			<meta attribute="pre-cond">
+				// Aqui nomas probando controlar la degeneracion por plantillas &amp;&amp; 
+				
+				
+			</meta>
+		</column>
 	</table>
 
 </hibernate-reverse-engineering>

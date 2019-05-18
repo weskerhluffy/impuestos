@@ -96,8 +96,9 @@ public class FacturasPeriodoController {
 	}
 
 	@GetMapping(value = "/calculaGastos")
-	// XXX:
-	// https://stackoverflow.com/questions/15164864/how-to-accept-date-params-in-a-get-request-to-spring-mvc-controller
+	// @formatter:off
+	// XXX: https://stackoverflow.com/questions/15164864/how-to-accept-date-params-in-a-get-request-to-spring-mvc-controller
+	// @formatter:on
 	public ModelAndView calculaGastos(@RequestParam("periodo") @DateTimeFormat(pattern = "yyyy-MM-dd") Date periodo) {
 		LOGGER.debug("TMPH periodo {}", periodo);
 		var params = new HashMap<String, Object>();
@@ -366,7 +367,7 @@ public class FacturasPeriodoController {
 						factura = new Factura(rfc, razonSocial, descripcion, folio, periodo, ahora, ahora);
 						LOGGER.debug("TMPH factura nueva kedo {}", factura);
 						factura = facturaDAO.save(factura);
-						MontoFactura montoFactura = new MontoFactura(factura, monto, ahora);
+						MontoFactura montoFactura = new MontoFactura(factura, monto, ahora, null);
 						montoFactura = montoFacturaDAO.save(montoFactura);
 						LOGGER.debug("TMPH se dio de alta monto {}", montoFactura);
 
@@ -375,8 +376,10 @@ public class FacturasPeriodoController {
 					}
 
 				} catch (RuntimeException e) {
-					// XXX:
-					// https://stackoverflow.com/questions/40301779/how-to-handle-a-psqlexception-in-java
+					// @formatter:off
+					// XXX: https://stackoverflow.com/questions/40301779/how-to-handle-a-psqlexception-in-java
+					// @formatter:on
+
 					LOGGER.error("Factura {} ya esta dada de alta {}", factura, ExceptionUtils.getStackTrace(e));
 				}
 			}
@@ -417,9 +420,9 @@ public class FacturasPeriodoController {
 			}
 			if (facturaVigente.getPorcentaje() != null) {
 				PorcentajeDepreciacionAnualFactura porcentajeDepreciacionAnualFactura = new PorcentajeDepreciacionAnualFactura(
-						factura, facturaVigente.getPorcentaje(), tiempoCreacion);
+						factura, facturaVigente.getPorcentaje(), tiempoCreacion, null);
 				FechaInicioDepreciacionFactura fechaInicioDepreciacionFactura = new FechaInicioDepreciacionFactura(
-						factura, facturaVigente.getFechaInicioDepreciacion(), tiempoCreacion);
+						factura, facturaVigente.getFechaInicioDepreciacion(), tiempoCreacion, null);
 				LOGGER.debug("TMPH guardando datos dep {}", porcentajeDepreciacionAnualFactura,
 						fechaInicioDepreciacionFactura);
 				entityManager.persist(porcentajeDepreciacionAnualFactura);
@@ -429,7 +432,7 @@ public class FacturasPeriodoController {
 			FacturaVigente facturaVigente2 = facturaVigenteDAO.findById(facturaVigente.getId()).get();
 			if (facturaVigente.getMonto() != facturaVigente2.getMonto()) {
 				MontoDeducibleFactura montoDeducibleFactura = new MontoDeducibleFactura(factura,
-						facturaVigente.getMonto(), tiempoCreacion);
+						facturaVigente.getMonto(), tiempoCreacion, null);
 				LOGGER.debug("TMPH guardando datos monto {}", montoDeducibleFactura);
 				entityManager.persist(montoDeducibleFactura);
 			}
