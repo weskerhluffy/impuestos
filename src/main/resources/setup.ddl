@@ -97,10 +97,10 @@ AS
          f.periodo,
          f.razon_social_emisor,
          f.descripcion,
-         m.id id_monto,
-         md.id id_monto_deducible,
-         p.id id_porcentaje,
-         fd.id id_fecha_inicio_depreciacion
+         m.id id_monto_factura,
+         md.id id_monto_deducible_factura,
+         p.id id_porcentaje_factura,
+         fd.id id_fecha_inicio_depreciacion_factura
   FROM   factura f 
          INNER JOIN monto_factura_vigente m 
                  ON f.id = m.id_factura 

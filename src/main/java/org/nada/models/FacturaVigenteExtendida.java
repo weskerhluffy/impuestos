@@ -20,7 +20,8 @@ public class FacturaVigenteExtendida extends FacturaVigente {
 		super(facturaVigente.getRfcEmisor(), facturaVigente.getFolio(), facturaVigente.getMonto(),
 				facturaVigente.getPorcentaje(), facturaVigente.getFechaInicioDepreciacion(), facturaVigente.getAno(),
 				facturaVigente.getMes(), facturaVigente.getPeriodo(), facturaVigente.getRazonSocialEmisor(),
-				facturaVigente.getDescripcion());
+				facturaVigente.getDescripcion(), facturaVigente.getIdMonto(), facturaVigente.getIdMontoDeducible(),
+				facturaVigente.getIdPorcentaje(), facturaVigente.getIdFechaInicioDepreciacion());
 		this.setId(facturaVigente.getId());
 	}
 

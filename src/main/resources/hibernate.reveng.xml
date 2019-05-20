@@ -98,6 +98,15 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 		</primary-key>
 	</table>
 	<table schema="public" name="declaracion_factura">
+		<meta attribute="extra-import">org.apache.commons.lang3.builder.ToStringBuilder</meta>
+		<meta attribute="class-code">
+        <![CDATA[
+// Aca nomas probando controla la autodegeneracion con <<class-code >>
+// TODO: https://stackoverflow.com/questions/2653268/what-are-the-shortcut-to-auto-generating-tostring-method-in-eclipse
+public String toString() { return ToStringBuilder.reflectionToString(this); }
+
+        ]]>
+		</meta>
 		<primary-key>
 			<generator class="identity"></generator>
 			<key-column name="id" />
@@ -127,4 +136,10 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 		</column>
 	</table>
 
+	<table schema="public" name="declaracion">
+		<primary-key>
+			<generator class="identity"></generator>
+			<key-column name="id" />
+		</primary-key>
+	</table>
 </hibernate-reverse-engineering>

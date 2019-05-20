@@ -1,5 +1,6 @@
 package org.nada.controller;
 
+import java.beans.PropertyEditorSupport;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -30,12 +31,15 @@ import javax.transaction.Transactional;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.xmlbeans.XmlException;
 import org.nada.dao.DeclaracionVigenteDAO;
 import org.nada.dao.FacturaDAO;
 import org.nada.dao.FacturaVigenteDAO;
 import org.nada.dao.MontoFacturaDAO;
+import org.nada.models.Declaracion;
+import org.nada.models.DeclaracionFactura;
 import org.nada.models.DeclaracionVigente;
 import org.nada.models.Factura;
 import org.nada.models.FacturaVigente;
@@ -49,7 +53,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -136,6 +142,9 @@ public class FacturasPeriodoController {
 		params.put("sumaDepreciadas", sumaDepreciadas);
 
 		List<DeclaracionVigente> declaracionVigentes = new ArrayList<>();
+		// @formatter:off
+		// XXX: https://stackoverflow.com/questions/6416706/easy-way-to-convert-iterable-to-collection
+        // @formatter:on
 		declaracionVigenteDAO.findAll().forEach(declaracionVigentes::add);
 		LOGGER.debug("TMPH declaraciones vigentes {}", declaracionVigentes);
 
@@ -447,6 +456,97 @@ public class FacturasPeriodoController {
 			}
 		}
 		return "redirect:/modificaDepreciacion?periodo=" + FORMATEADOR_FECHA.format(periodo);
+	}
+
+	@Transactional
+	@PostMapping(value = "/registraDeclaracion")
+	public String registraDeclaracion(DeclaracionFacturasContainer declaracionFacturasContainer) {
+		LOGGER.debug("TMPH declaraciones facts {}", declaracionFacturasContainer);
+		// TODO: Validar que sean del periodo o depreciadas vigentes
+		Date periodo = declaracionFacturasContainer.getDeclaracionFacturasNoDepreciadas().get(0).getMontoFactura()
+				.getFactura().getPeriodo();
+
+		Declaracion declaracion = new Declaracion(null, periodo);
+		entityManager.persist(declaracion);
+		LOGGER.debug("TMPH declaracion {}", declaracion);
+
+		for (DeclaracionFactura declaracionFactura : declaracionFacturasContainer
+				.getDeclaracionFacturasNoDepreciadas()) {
+			declaracionFactura.setDeclaracion(declaracion);
+			// TODO: Validar que si hay porcentaje hay fecha inicio depreciacion
+			entityManager.persist(declaracionFactura);
+			LOGGER.debug("TMPH declaracion fact {}", declaracion);
+		}
+		return "redirect:/visualizaDeclaracion?periodo=" + FORMATEADOR_FECHA.format(periodo);
+	}
+
+	@GetMapping(value = "/visualizaDeclaracion")
+	public ModelAndView visualizaDeclaracion(@DateTimeFormat(pattern = "yyyy-MM-dd") Date periodo) {
+		DeclaracionVigente declaracionVigente = declaracionVigenteDAO.findByPeriodo(periodo);
+		LOGGER.debug("TMPH declaracion vigente de {} es {}", periodo, declaracionVigente);
+		LOGGER.debug("TMPH declaracion facts {}", periodo, declaracionVigente.getDeclaracionFacturas());
+		var params = new HashMap<String, Object>();
+		params.put("declaracionVigente", declaracionVigente);
+		return new ModelAndView("visualizaDeclaracion", params);
+	}
+
+	// @formatter:off
+	// XXX: https://stackoverflow.com/questions/12544479/spring-mvc-type-conversion-propertyeditor-or-converter
+	// XXX: https://docs.spring.io/spring/docs/2.5.5/reference/mvc.html#mvc-ann-webdatabinder
+	// XXX: https://stackoverflow.com/questions/67980/how-do-i-register-a-custom-type-converter-in-spring
+	// @formatter:on
+	@InitBinder
+	public void initBinder(WebDataBinder binder) {
+		binder.registerCustomEditor(MontoFactura.class, new MontoFacturaEditor(entityManager));
+	}
+}
+
+// XXX: https://www.baeldung.com/spring-mvc-custom-property-editor
+class MontoFacturaEditor extends PropertyEditorSupport {
+	private final EntityManager entityManager;
+	private static final Logger LOGGER = LoggerFactory.getLogger(MontoFacturaEditor.class);
+
+	public MontoFacturaEditor(EntityManager entityManager) {
+		this.entityManager = entityManager;
+	}
+
+	@Override
+	public String getAsText() {
+		MontoFactura montoFactura = (MontoFactura) getValue();
+
+		return montoFactura == null ? "" : montoFactura.getId().toString();
+	}
+
+	@Override
+	public void setAsText(String text) throws IllegalArgumentException {
+		LOGGER.debug("TMPH transformando de {}", text);
+		// @formatter:off
+		// XXX: https://stackoverflow.com/questions/5439529/determine-if-a-string-is-an-integer-in-java
+		// @formatter:on
+		if (StringUtils.isEmpty(text) || !StringUtils.isNumeric(text)) {
+			setValue(null);
+		} else {
+			Integer id = Integer.parseInt(text);
+			MontoFactura montoFactura = entityManager.find(MontoFactura.class, id);
+			LOGGER.debug("TMPH pasado de {} a {}", id, montoFactura);
+			setValue(montoFactura);
+		}
+	}
+}
+
+class DeclaracionFacturasContainer {
+	private List<DeclaracionFactura> declaracionFacturasNoDepreciadas;
+
+	public List<DeclaracionFactura> getDeclaracionFacturasNoDepreciadas() {
+		return declaracionFacturasNoDepreciadas;
+	}
+
+	public void setDeclaracionFacturasNoDepreciadas(List<DeclaracionFactura> declaracionFacturasNoDepreciadas) {
+		this.declaracionFacturasNoDepreciadas = declaracionFacturasNoDepreciadas;
+	}
+
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this);
 	}
 
 }
