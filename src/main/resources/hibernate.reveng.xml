@@ -105,6 +105,20 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 // TODO: https://stackoverflow.com/questions/2653268/what-are-the-shortcut-to-auto-generating-tostring-method-in-eclipse
 public String toString() { return ToStringBuilder.reflectionToString(this); }
 
+	private DeclaracionVigente declaracionVigente;
+
+	@ManyToOne(targetEntity = DeclaracionVigente.class)
+	@JoinColumn(name = "id_declaracion", updatable = false, insertable = false)
+	public DeclaracionVigente getDeclaracionVigente() {
+		return declaracionVigente;
+	}
+
+	public void setDeclaracionVigente(DeclaracionVigente declaracionVigente) {
+		this.declaracionVigente = declaracionVigente;
+	}
+
+
+
         ]]>
 		</meta>
 		<primary-key>
@@ -115,11 +129,24 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 	<table schema="public" name="declaracion_vigente">
 
 		<meta attribute="extra-import">org.apache.commons.lang3.builder.ToStringBuilder</meta>
+		<meta attribute="extra-import">import java.util.Set</meta>
+		<meta attribute="extra-import">import javax.persistence.OneToMany</meta>
 		<meta attribute="class-code">
         <![CDATA[
 // Aca nomas probando controla la autodegeneracion con <<class-code >>
 // TODO: https://stackoverflow.com/questions/2653268/what-are-the-shortcut-to-auto-generating-tostring-method-in-eclipse
 public String toString() { return ToStringBuilder.reflectionToString(this); }
+
+	private Set<DeclaracionFactura> declaracionFacturas;
+
+	@OneToMany(mappedBy = "declaracionVigente", targetEntity = DeclaracionFactura.class)
+	public Set<DeclaracionFactura> getDeclaracionFacturas() {
+		return declaracionFacturas;
+	}
+
+	public void setDeclaracionFacturas(Set<DeclaracionFactura> declaracionFacturas) {
+		this.declaracionFacturas = declaracionFacturas;
+	}
 
         ]]>
 		</meta>

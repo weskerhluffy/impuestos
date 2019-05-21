@@ -187,3 +187,7 @@ ORDER  BY f.periodo
 SELECT f.* FROM   factura_vigente f WHERE  ( Mesdif(:periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) > 0 OR Mismo_periodo(f.fecha_inicio_depreciacion, date('2019-01-01')) ) AND ( ( ( f.monto * ( Coalesce(f.porcentaje, 0) / 100 ) ) / 12 ) + 0.005 ) * Mesdif( :periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) < f.monto ORDER  BY f.periodo 
 
 update factura set descripcion='IVA acreditable', folio='83' where id=121;
+
+update declaracion set tiempo_creacion=now()
+select * from declaracion_vigente
+select * from declaracion_factura

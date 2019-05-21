@@ -461,18 +461,20 @@ public class FacturasPeriodoController {
 	@Transactional
 	@PostMapping(value = "/registraDeclaracion")
 	public String registraDeclaracion(DeclaracionFacturasContainer declaracionFacturasContainer) {
+		Date ahora = new Date();
 		LOGGER.debug("TMPH declaraciones facts {}", declaracionFacturasContainer);
 		// TODO: Validar que sean del periodo o depreciadas vigentes
 		Date periodo = declaracionFacturasContainer.getDeclaracionFacturasNoDepreciadas().get(0).getMontoFactura()
 				.getFactura().getPeriodo();
 
-		Declaracion declaracion = new Declaracion(null, periodo);
+		Declaracion declaracion = new Declaracion(periodo, ahora);
 		entityManager.persist(declaracion);
 		LOGGER.debug("TMPH declaracion {}", declaracion);
 
 		for (DeclaracionFactura declaracionFactura : declaracionFacturasContainer
 				.getDeclaracionFacturasNoDepreciadas()) {
-			declaracionFactura.setDeclaracion(declaracion);
+			declaracionFactura.setIdDeclaracion(declaracion.getId());
+			declaracionFactura.setTiempoCreacion(ahora);
 			// TODO: Validar que si hay porcentaje hay fecha inicio depreciacion
 			entityManager.persist(declaracionFactura);
 			LOGGER.debug("TMPH declaracion fact {}", declaracion);
