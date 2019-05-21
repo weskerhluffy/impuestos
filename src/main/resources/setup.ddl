@@ -155,7 +155,7 @@ CREATE TABLE declaracion_factura (
  id_porcentaje_depreciacion INTEGER REFERENCES porcentaje_depreciacion_anual_factura(id),
  id_fecha_inicio_depreciacion INTEGER REFERENCES fecha_inicio_depreciacion_factura(id),
  id_declaracion INTEGER not null REFERENCES declaracion(id),
- tiempo_creacion timestamp not null default CURRENT_DATE
+ tiempo_creacion timestamp default CURRENT_DATE
 );
 
 CREATE OR replace VIEW declaracion_vigente

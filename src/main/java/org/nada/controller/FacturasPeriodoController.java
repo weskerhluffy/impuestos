@@ -498,6 +498,7 @@ public class FacturasPeriodoController {
 	@InitBinder
 	public void initBinder(WebDataBinder binder) {
 		binder.registerCustomEditor(MontoFactura.class, new MontoFacturaEditor(entityManager));
+		binder.registerCustomEditor(Factura.class, new FacturaEditor(entityManager));
 	}
 }
 
@@ -528,6 +529,38 @@ class MontoFacturaEditor extends PropertyEditorSupport {
 		} else {
 			Integer id = Integer.parseInt(text);
 			MontoFactura montoFactura = entityManager.find(MontoFactura.class, id);
+			LOGGER.debug("TMPH pasado de {} a {}", id, montoFactura);
+			setValue(montoFactura);
+		}
+	}
+}
+
+class FacturaEditor extends PropertyEditorSupport {
+	private final EntityManager entityManager;
+	private static final Logger LOGGER = LoggerFactory.getLogger(FacturaEditor.class);
+
+	public FacturaEditor(EntityManager entityManager) {
+		this.entityManager = entityManager;
+	}
+
+	@Override
+	public String getAsText() {
+		Factura montoFactura = (Factura) getValue();
+
+		return montoFactura == null ? "" : montoFactura.getId().toString();
+	}
+
+	@Override
+	public void setAsText(String text) throws IllegalArgumentException {
+		LOGGER.debug("TMPH transformando de {}", text);
+		// @formatter:off
+		// XXX: https://stackoverflow.com/questions/5439529/determine-if-a-string-is-an-integer-in-java
+		// @formatter:on
+		if (StringUtils.isEmpty(text) || !StringUtils.isNumeric(text)) {
+			setValue(null);
+		} else {
+			Integer id = Integer.parseInt(text);
+			Factura montoFactura = entityManager.find(Factura.class, id);
 			LOGGER.debug("TMPH pasado de {} a {}", id, montoFactura);
 			setValue(montoFactura);
 		}

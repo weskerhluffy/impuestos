@@ -35,6 +35,7 @@ public class DeclaracionFactura implements java.io.Serializable {
 	private DeclaracionVigente declaracionVigente;
 
 	@ManyToOne(targetEntity = DeclaracionVigente.class)
+	@JoinColumn(name = "id_declaracion", updatable = false, insertable = false)
 	public DeclaracionVigente getDeclaracionVigente() {
 		return declaracionVigente;
 	}
@@ -141,7 +142,7 @@ public class DeclaracionFactura implements java.io.Serializable {
 	}
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "tiempo_creacion", nullable = false, length = 29)
+	@Column(name = "tiempo_creacion", nullable = true, length = 29)
 	public Date getTiempoCreacion() {
 		return this.tiempoCreacion;
 	}
