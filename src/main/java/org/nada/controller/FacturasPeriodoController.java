@@ -68,6 +68,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Node;
 
+import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 import com.opencsv.CSVReader;
 
@@ -475,13 +476,15 @@ public class FacturasPeriodoController {
 		entityManager.persist(declaracion);
 		LOGGER.debug("TMPH declaracion {}", declaracion);
 
-		for (DeclaracionFactura declaracionFactura : declaracionFacturasContainer
-				.getDeclaracionFacturasNoDepreciadas()) {
+		// XXX: https://www.baeldung.com/java-combine-multiple-collections
+		for (DeclaracionFactura declaracionFactura : Iterables.concat(
+				declaracionFacturasContainer.getDeclaracionFacturasNoDepreciadas(),
+				declaracionFacturasContainer.getDeclaracionFacturasDepreciadas())) {
 			declaracionFactura.setIdDeclaracion(declaracion.getId());
 			declaracionFactura.setTiempoCreacion(ahora);
 			// TODO: Validar que si hay porcentaje hay fecha inicio depreciacion
 			entityManager.persist(declaracionFactura);
-			LOGGER.debug("TMPH declaracion fact {}", declaracion);
+			LOGGER.debug("TMPH declaracion fact {}", declaracionFactura);
 		}
 		return "redirect:/visualizaDeclaracion?periodo=" + FORMATEADOR_FECHA.format(periodo);
 	}
@@ -493,6 +496,19 @@ public class FacturasPeriodoController {
 		LOGGER.debug("TMPH declaracion facts {}", periodo, declaracionVigente.getDeclaracionFacturas());
 		var params = new HashMap<String, Object>();
 		params.put("declaracionVigente", declaracionVigente);
+
+		var montoDepreciacionMensualAcumuladaPorFacturaId = new HashMap<String, Double>();
+		var declaracionFacturasDepreciadas = declaracionVigente.getDeclaracionFacturas().stream()
+				.filter(df -> df.getFechaInicioDepreciacionFactura() != null).collect(Collectors.toList());
+//		LOGGER.debug("TMPH facturas decl depr {}", declaracionFacturasDepreciadas);
+		for (FacturaVigenteExtendida facturaVigente : declaracionFacturasDepreciadas.stream()
+				.map(df -> new FacturaVigenteExtendida(df.getFacturaVigente())).collect(Collectors.toList())) {
+			LOGGER.debug("TMPH factura ext {}", facturaVigente);
+			montoDepreciacionMensualAcumuladaPorFacturaId.put(facturaVigente.getId().toString(),
+					calculaMontoDepreciacionAcumuladaMensual(facturaVigente, periodo));
+		}
+		params.put("montoDepreciacionMensualAcumuladaPorFacturaId", montoDepreciacionMensualAcumuladaPorFacturaId);
+
 		return new ModelAndView("visualizaDeclaracion", params);
 	}
 
@@ -506,8 +522,10 @@ public class FacturasPeriodoController {
 		binder.registerCustomEditor(MontoFactura.class, new MontoFacturaEditor(entityManager));
 		binder.registerCustomEditor(Factura.class, new FacturaEditor(entityManager));
 		binder.registerCustomEditor(MontoDeducibleFactura.class, new MontoDeducibleFacturaEditor(entityManager));
-		binder.registerCustomEditor(FechaInicioDepreciacionFactura.class, new FechaInicioDepreciacionFacturaEditor(entityManager));
-		binder.registerCustomEditor(PorcentajeDepreciacionAnualFactura.class, new PorcentajeDepreciacionAnualFacturaEditor(entityManager));
+		binder.registerCustomEditor(FechaInicioDepreciacionFactura.class,
+				new FechaInicioDepreciacionFacturaEditor(entityManager));
+		binder.registerCustomEditor(PorcentajeDepreciacionAnualFactura.class,
+				new PorcentajeDepreciacionAnualFacturaEditor(entityManager));
 	}
 }
 
