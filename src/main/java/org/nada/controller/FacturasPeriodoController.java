@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -51,6 +53,7 @@ import org.nada.models.PorcentajeDepreciacionAnualFactura;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.GenericTypeResolver;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.WebDataBinder;
@@ -65,6 +68,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Node;
 
+import com.google.common.reflect.TypeToken;
 import com.opencsv.CSVReader;
 
 import mx.gob.sat.cfd.x3.ComprobanteDocument;
@@ -499,12 +503,19 @@ public class FacturasPeriodoController {
 	// @formatter:on
 	@InitBinder
 	public void initBinder(WebDataBinder binder) {
+		/*
+		 * binder.registerCustomEditor(MontoFactura.class, new
+		 * MontoFacturaEditor(entityManager));
+		 * binder.registerCustomEditor(Factura.class, new FacturaEditor(entityManager));
+		 */
+//		binder.registerCustomEditor(MontoFactura.class, new ModeloFacturaEditorImpl<MontoFactura>(entityManager));
 		binder.registerCustomEditor(MontoFactura.class, new MontoFacturaEditor(entityManager));
 		binder.registerCustomEditor(Factura.class, new FacturaEditor(entityManager));
 	}
 }
 
 // XXX: https://www.baeldung.com/spring-mvc-custom-property-editor
+/*
 class MontoFacturaEditor extends PropertyEditorSupport {
 	private final EntityManager entityManager;
 	private static final Logger LOGGER = LoggerFactory.getLogger(MontoFacturaEditor.class);
@@ -536,7 +547,16 @@ class MontoFacturaEditor extends PropertyEditorSupport {
 		}
 	}
 }
+*/
 
+class MontoFacturaEditor extends ModeloFacturaEditorImpl<MontoFactura> {
+
+	public MontoFacturaEditor(EntityManager entityManager) {
+		super(entityManager);
+	}
+}
+
+/*
 class FacturaEditor extends PropertyEditorSupport {
 	private final EntityManager entityManager;
 	private static final Logger LOGGER = LoggerFactory.getLogger(FacturaEditor.class);
@@ -568,6 +588,90 @@ class FacturaEditor extends PropertyEditorSupport {
 		}
 	}
 }
+*/
+
+class FacturaEditor extends ModeloFacturaEditorImpl<Factura> {
+
+	public FacturaEditor(EntityManager arg0) {
+		super(arg0);
+	}
+
+}
+
+interface ModeloFacturaEditor<T> {
+	public String getAsText();
+
+	public void setAsText(String text) throws IllegalArgumentException;
+}
+
+// XXX: https://stackoverflow.com/questions/3437897/how-to-get-a-class-instance-of-generics-type-t/22675121
+class ModeloFacturaEditorImpl<T> extends PropertyEditorSupport implements ModeloFacturaEditor<T> {
+	private final EntityManager entityManager;
+	private static final Logger LOGGER = LoggerFactory.getLogger(ModeloFacturaEditor.class);
+
+	private Class<T> entityBeanType;
+
+	public ModeloFacturaEditorImpl(EntityManager entityManager) {
+		this.entityManager = entityManager;
+		this.entityBeanType = ((Class<T>) ((ParameterizedType) getClass().getGenericSuperclass())
+				.getActualTypeArguments()[0]);
+		LOGGER.debug("TMPH tiipo {}", entityBeanType);
+	}
+
+	@Override
+	public String getAsText() {
+		@SuppressWarnings("unchecked")
+		T modelo = (T) getValue();
+		String idStr = null;
+		if (modelo != null) {
+			Field field;
+			try {
+				// @formatter:off
+				// XXX: https://stackoverflow.com/questions/13400075/reflection-generic-get-field-value
+				// @formatter:on
+				field = modelo.getClass().getDeclaredField("id");
+				field.setAccessible(true);
+				Integer id = (Integer) field.get(modelo);
+				field.setAccessible(false);
+				if (id != null) {
+					idStr = id.toString();
+				}
+			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+				LOGGER.debug("No se pudo obtener id de {} error {}", modelo, ExceptionUtils.getStackTrace(e));
+			}
+		}
+
+		return idStr;
+	}
+
+	@Override
+	public void setAsText(String text) throws IllegalArgumentException {
+		LOGGER.debug("TMPH transformando de {} a {}", text, entityBeanType);
+		// @formatter:off
+		// XXX: https://stackoverflow.com/questions/5439529/determine-if-a-string-is-an-integer-in-java
+		// @formatter:on
+		if (StringUtils.isEmpty(text) || !StringUtils.isNumeric(text)) {
+			setValue(null);
+		} else {
+			Integer id = Integer.parseInt(text);
+			LOGGER.debug("TMPH id es {}", id);
+			TypeToken<T> t = new TypeToken<T>(getClass()) {
+			};
+			LOGGER.debug("TMPH type tok es {} {}", t, t.getRawType());
+
+//			TypeToken<?> funResultToken = t.resolveType(ModeloFacturaEditor.class.getTypeParameters()[0]);
+			Class<?> clazz = (Class<?>) ClassUtils.getParameterizedType(getClass()).getActualTypeArguments()[0];
+//			Class<?> clazz = getClass().getTypeParameters()[0];
+//			Class<?> clazz = (Class<T>) GenericTypeResolver.resolveTypeArgument(getClass(), ModeloFacturaEditor.class);
+//			Class<?> clazz = ((Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()) .getActualTypeArguments()[0]);
+//			Class<?> clazz = funResultToken.getRawType();
+			LOGGER.debug("TMPH clazz es {}", clazz);
+			T modelo = (T) entityManager.find(clazz, id);
+			LOGGER.debug("TMPH pasado de {} a {}", id, modelo);
+			setValue(modelo);
+		}
+	}
+}
 
 class DeclaracionFacturasContainer {
 	private List<DeclaracionFactura> declaracionFacturasNoDepreciadas;
@@ -582,6 +686,49 @@ class DeclaracionFacturasContainer {
 
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this);
+	}
+
+}
+
+abstract class ClassUtils {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ClassUtils.class);
+
+	static public ParameterizedType getParameterizedType(Class<?> target) {
+		Type[] types = getGenericType(target);
+		if (types.length > 0 && types[0] instanceof ParameterizedType) {
+			return (ParameterizedType) types[0];
+		}
+		return null;
+	}
+
+	static public Type[] getParameterizedTypes(Class<?> target) {
+		Type[] types = getGenericType(target);
+		LOGGER.debug("TMPH types parm {}", types);
+		if (types.length > 0 && types[0] instanceof ParameterizedType) {
+			return ((ParameterizedType) types[0]).getActualTypeArguments();
+		}
+		return null;
+	}
+
+	static public Type[] getGenericType(Class<?> target) {
+		LOGGER.debug("TMPH target {}", target);
+		if (target == null)
+			return new Type[0];
+		Type[] types = target.getGenericInterfaces();
+		LOGGER.debug("TMPH types {}", types);
+
+		if (types.length > 0) {
+			return types;
+		}
+		Type type = target;
+		LOGGER.debug("TMPH type {} is parame {}", type, type instanceof ParameterizedType);
+		if (type != null) {
+			if (type instanceof ParameterizedType) {
+				LOGGER.debug("TMPH type paramee {}", type);
+				return new Type[] { type };
+			}
+		}
+		return new Type[0];
 	}
 
 }
