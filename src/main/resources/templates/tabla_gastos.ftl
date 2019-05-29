@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Show message</title>
+<title>Gastos ${periodo?string["yyyy-MM-dd, HH:mm"]}</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style type="text/css">
@@ -37,9 +37,14 @@ table, th, td {
 					<!-- TODO: Añadir monto original -->
 					<!-- XXX: https://stackoverflow.com/questions/20960069/how-to-customize-number-format-in-freemarker -->
 					<td style="text-align: right;">
-						${factura.monto?string(",##0.00")} 
-						<input type="hidden" name="declaracionFacturasNoDepreciadas[${factura?index}].montoFactura" value="${factura.idMonto}" />
-						<input type="hidden" name="declaracionFacturasNoDepreciadas[${factura?index}].factura" value="${factura.id}" />
+						${factura.monto?string(",##0.00")} <input type="hidden"
+						name="declaracionFacturasNoDepreciadas[${factura?index}].montoFactura"
+						value="${factura.idMonto}" /> <input type="hidden"
+						name="declaracionFacturasNoDepreciadas[${factura?index}].factura"
+						value="${factura.id}" /> <input type="hidden"
+						name="declaracionFacturasNoDepreciadas[${factura?index}].montoDeducibleFactura"
+						value="${factura.idMontoDeducible}" />
+
 					</td>
 				</tr>
 				</#items> <#else></#list>
@@ -86,7 +91,23 @@ table, th, td {
 					<td style="text-align: right;">${factura.periodo?string["yyyy-MM-dd"]}</td>
 					<td style="text-align: right;">${factura.montoDepreciacionMensual?string(",##0.00")}</td>
 					<!-- XXX: https://stackoverflow.com/questions/14821329/freemarker-and-hashmap-how-do-i-get-key-value -->
-					<td style="text-align: right;">${montoDepreciacionMensualAcumuladaPorFacturaId[factura.id?string]?string(",##0.00")}</td>
+					<td style="text-align: right;">
+
+						${montoDepreciacionMensualAcumuladaPorFacturaId[factura.id?string]?string(",##0.00")}
+						<input type="hidden"
+						name="declaracionFacturasDepreciadas[${factura?index}].montoFactura"
+						value="${factura.idMonto}" /> <input type="hidden"
+						name="declaracionFacturasDepreciadas[${factura?index}].factura"
+						value="${factura.id}" /> <input type="hidden"
+						name="declaracionFacturasDepreciadas[${factura?index}].montoDeducibleFactura"
+						value="${(factura.idMontoDeducible?string)!''}" /> <input type="hidden"
+						name="declaracionFacturasDepreciadas[${factura?index}].fechaInicioDepreciacionFactura"
+						value="${factura.idFechaInicioDepreciacion}" /> <input
+						type="hidden"
+						name="declaracionFacturasDepreciadas[${factura?index}].porcentajeDepreciacionAnualFactura"
+						value="${factura.idPorcentaje}" />
+
+					</td>
 				</tr>
 				</#items> <#else></#list>
 			</tbody>
@@ -105,7 +126,7 @@ table, th, td {
 				</tr>
 			</tfoot>
 		</table>
-		<input type="submit" name="Registrar"/>
+		<input type="submit" name="Registrar" />
 	</form>
 	<p>Grand total: ${sumaNoDepreciadas+sumaDepreciadas}</p>
 

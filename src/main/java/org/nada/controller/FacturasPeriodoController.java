@@ -503,92 +503,21 @@ public class FacturasPeriodoController {
 	// @formatter:on
 	@InitBinder
 	public void initBinder(WebDataBinder binder) {
-		/*
-		 * binder.registerCustomEditor(MontoFactura.class, new
-		 * MontoFacturaEditor(entityManager));
-		 * binder.registerCustomEditor(Factura.class, new FacturaEditor(entityManager));
-		 */
-//		binder.registerCustomEditor(MontoFactura.class, new ModeloFacturaEditorImpl<MontoFactura>(entityManager));
 		binder.registerCustomEditor(MontoFactura.class, new MontoFacturaEditor(entityManager));
 		binder.registerCustomEditor(Factura.class, new FacturaEditor(entityManager));
+		binder.registerCustomEditor(MontoDeducibleFactura.class, new MontoDeducibleFacturaEditor(entityManager));
+		binder.registerCustomEditor(FechaInicioDepreciacionFactura.class, new FechaInicioDepreciacionFacturaEditor(entityManager));
+		binder.registerCustomEditor(PorcentajeDepreciacionAnualFactura.class, new PorcentajeDepreciacionAnualFacturaEditor(entityManager));
 	}
 }
 
 // XXX: https://www.baeldung.com/spring-mvc-custom-property-editor
-/*
-class MontoFacturaEditor extends PropertyEditorSupport {
-	private final EntityManager entityManager;
-	private static final Logger LOGGER = LoggerFactory.getLogger(MontoFacturaEditor.class);
-
-	public MontoFacturaEditor(EntityManager entityManager) {
-		this.entityManager = entityManager;
-	}
-
-	@Override
-	public String getAsText() {
-		MontoFactura montoFactura = (MontoFactura) getValue();
-
-		return montoFactura == null ? "" : montoFactura.getId().toString();
-	}
-
-	@Override
-	public void setAsText(String text) throws IllegalArgumentException {
-		LOGGER.debug("TMPH transformando de {}", text);
-		// @formatter:off
-		// XXX: https://stackoverflow.com/questions/5439529/determine-if-a-string-is-an-integer-in-java
-		// @formatter:on
-		if (StringUtils.isEmpty(text) || !StringUtils.isNumeric(text)) {
-			setValue(null);
-		} else {
-			Integer id = Integer.parseInt(text);
-			MontoFactura montoFactura = entityManager.find(MontoFactura.class, id);
-			LOGGER.debug("TMPH pasado de {} a {}", id, montoFactura);
-			setValue(montoFactura);
-		}
-	}
-}
-*/
-
 class MontoFacturaEditor extends ModeloFacturaEditorImpl<MontoFactura> {
 
 	public MontoFacturaEditor(EntityManager entityManager) {
 		super(entityManager);
 	}
 }
-
-/*
-class FacturaEditor extends PropertyEditorSupport {
-	private final EntityManager entityManager;
-	private static final Logger LOGGER = LoggerFactory.getLogger(FacturaEditor.class);
-
-	public FacturaEditor(EntityManager entityManager) {
-		this.entityManager = entityManager;
-	}
-
-	@Override
-	public String getAsText() {
-		Factura montoFactura = (Factura) getValue();
-
-		return montoFactura == null ? "" : montoFactura.getId().toString();
-	}
-
-	@Override
-	public void setAsText(String text) throws IllegalArgumentException {
-		LOGGER.debug("TMPH transformando de {}", text);
-		// @formatter:off
-		// XXX: https://stackoverflow.com/questions/5439529/determine-if-a-string-is-an-integer-in-java
-		// @formatter:on
-		if (StringUtils.isEmpty(text) || !StringUtils.isNumeric(text)) {
-			setValue(null);
-		} else {
-			Integer id = Integer.parseInt(text);
-			Factura montoFactura = entityManager.find(Factura.class, id);
-			LOGGER.debug("TMPH pasado de {} a {}", id, montoFactura);
-			setValue(montoFactura);
-		}
-	}
-}
-*/
 
 class FacturaEditor extends ModeloFacturaEditorImpl<Factura> {
 
@@ -611,6 +540,7 @@ class ModeloFacturaEditorImpl<T> extends PropertyEditorSupport implements Modelo
 
 	private Class<T> entityBeanType;
 
+	@SuppressWarnings("unchecked")
 	public ModeloFacturaEditorImpl(EntityManager entityManager) {
 		this.entityManager = entityManager;
 		this.entityBeanType = ((Class<T>) ((ParameterizedType) getClass().getGenericSuperclass())
@@ -656,17 +586,15 @@ class ModeloFacturaEditorImpl<T> extends PropertyEditorSupport implements Modelo
 			Integer id = Integer.parseInt(text);
 			LOGGER.debug("TMPH id es {}", id);
 			TypeToken<T> t = new TypeToken<T>(getClass()) {
+
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = -8926339339378748079L;
 			};
 			LOGGER.debug("TMPH type tok es {} {}", t, t.getRawType());
 
-//			TypeToken<?> funResultToken = t.resolveType(ModeloFacturaEditor.class.getTypeParameters()[0]);
-			Class<?> clazz = (Class<?>) ClassUtils.getParameterizedType(getClass()).getActualTypeArguments()[0];
-//			Class<?> clazz = getClass().getTypeParameters()[0];
-//			Class<?> clazz = (Class<T>) GenericTypeResolver.resolveTypeArgument(getClass(), ModeloFacturaEditor.class);
-//			Class<?> clazz = ((Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()) .getActualTypeArguments()[0]);
-//			Class<?> clazz = funResultToken.getRawType();
-			LOGGER.debug("TMPH clazz es {}", clazz);
-			T modelo = (T) entityManager.find(clazz, id);
+			T modelo = (T) entityManager.find(entityBeanType, id);
 			LOGGER.debug("TMPH pasado de {} a {}", id, modelo);
 			setValue(modelo);
 		}
@@ -675,6 +603,7 @@ class ModeloFacturaEditorImpl<T> extends PropertyEditorSupport implements Modelo
 
 class DeclaracionFacturasContainer {
 	private List<DeclaracionFactura> declaracionFacturasNoDepreciadas;
+	private List<DeclaracionFactura> declaracionFacturasDepreciadas;
 
 	public List<DeclaracionFactura> getDeclaracionFacturasNoDepreciadas() {
 		return declaracionFacturasNoDepreciadas;
@@ -688,47 +617,33 @@ class DeclaracionFacturasContainer {
 		return ToStringBuilder.reflectionToString(this);
 	}
 
+	public List<DeclaracionFactura> getDeclaracionFacturasDepreciadas() {
+		return declaracionFacturasDepreciadas;
+	}
+
+	public void setDeclaracionFacturasDepreciadas(List<DeclaracionFactura> declaracionFacturasDepreciadas) {
+		this.declaracionFacturasDepreciadas = declaracionFacturasDepreciadas;
+	}
+
 }
 
-abstract class ClassUtils {
-	private static final Logger LOGGER = LoggerFactory.getLogger(ClassUtils.class);
+class MontoDeducibleFacturaEditor extends ModeloFacturaEditorImpl<MontoDeducibleFactura> {
 
-	static public ParameterizedType getParameterizedType(Class<?> target) {
-		Type[] types = getGenericType(target);
-		if (types.length > 0 && types[0] instanceof ParameterizedType) {
-			return (ParameterizedType) types[0];
-		}
-		return null;
+	public MontoDeducibleFacturaEditor(EntityManager entityManager) {
+		super(entityManager);
 	}
+}
 
-	static public Type[] getParameterizedTypes(Class<?> target) {
-		Type[] types = getGenericType(target);
-		LOGGER.debug("TMPH types parm {}", types);
-		if (types.length > 0 && types[0] instanceof ParameterizedType) {
-			return ((ParameterizedType) types[0]).getActualTypeArguments();
-		}
-		return null;
+class FechaInicioDepreciacionFacturaEditor extends ModeloFacturaEditorImpl<FechaInicioDepreciacionFactura> {
+
+	public FechaInicioDepreciacionFacturaEditor(EntityManager entityManager) {
+		super(entityManager);
 	}
+}
 
-	static public Type[] getGenericType(Class<?> target) {
-		LOGGER.debug("TMPH target {}", target);
-		if (target == null)
-			return new Type[0];
-		Type[] types = target.getGenericInterfaces();
-		LOGGER.debug("TMPH types {}", types);
+class PorcentajeDepreciacionAnualFacturaEditor extends ModeloFacturaEditorImpl<PorcentajeDepreciacionAnualFactura> {
 
-		if (types.length > 0) {
-			return types;
-		}
-		Type type = target;
-		LOGGER.debug("TMPH type {} is parame {}", type, type instanceof ParameterizedType);
-		if (type != null) {
-			if (type instanceof ParameterizedType) {
-				LOGGER.debug("TMPH type paramee {}", type);
-				return new Type[] { type };
-			}
-		}
-		return new Type[0];
+	public PorcentajeDepreciacionAnualFacturaEditor(EntityManager entityManager) {
+		super(entityManager);
 	}
-
 }
