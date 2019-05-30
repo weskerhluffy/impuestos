@@ -15,6 +15,8 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
@@ -157,6 +159,7 @@ public class DeclaracionFactura implements java.io.Serializable {
 	}
 
 	private FacturaVigente facturaVigente;
+	private FacturaVigenteExtendida facturaVigenteExtendida;
 
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_factura", updatable = false, insertable = false)
@@ -166,6 +169,14 @@ public class DeclaracionFactura implements java.io.Serializable {
 
 	public void setFacturaVigente(FacturaVigente facturaVigente) {
 		this.facturaVigente = facturaVigente;
+	}
+
+	@Transient
+	public FacturaVigenteExtendida getFacturaVigenteExtendida() {
+		if (facturaVigenteExtendida == null) {
+			facturaVigenteExtendida = new FacturaVigenteExtendida(getFacturaVigente());
+		}
+		return facturaVigenteExtendida;
 	}
 
 	// end of extra code specified in the hbm.xml files

@@ -469,8 +469,14 @@ public class FacturasPeriodoController {
 		Date ahora = new Date();
 		LOGGER.debug("TMPH declaraciones facts {}", declaracionFacturasContainer);
 		// TODO: Validar que sean del periodo o depreciadas vigentes
-		Date periodo = declaracionFacturasContainer.getDeclaracionFacturasNoDepreciadas().get(0).getMontoFactura()
-				.getFactura().getPeriodo();
+		Date periodoFactura = declaracionFacturasContainer.getDeclaracionFacturasNoDepreciadas().get(0)
+				.getMontoFactura().getFactura().getPeriodo();
+
+		LocalDate localDate = periodoFactura.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		Integer ano = localDate.getYear();
+		Integer mes = localDate.getMonthValue();
+		LocalDate periodoLocalDate = LocalDate.of(ano, mes, 1);
+		var periodo = java.util.Date.from(periodoLocalDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
 
 		Declaracion declaracion = new Declaracion(periodo, ahora);
 		entityManager.persist(declaracion);
@@ -500,6 +506,9 @@ public class FacturasPeriodoController {
 		var montoDepreciacionMensualAcumuladaPorFacturaId = new HashMap<String, Double>();
 		var declaracionFacturasDepreciadas = declaracionVigente.getDeclaracionFacturas().stream()
 				.filter(df -> df.getFechaInicioDepreciacionFactura() != null).collect(Collectors.toList());
+		var facturasNoDepreciadas = declaracionVigente.getDeclaracionFacturas().stream()
+				.filter(df -> df.getFechaInicioDepreciacionFactura() == null).map(df -> df.getFacturaVigenteExtendida())
+				.collect(Collectors.toList());
 //		LOGGER.debug("TMPH facturas decl depr {}", declaracionFacturasDepreciadas);
 		for (FacturaVigenteExtendida facturaVigente : declaracionFacturasDepreciadas.stream()
 				.map(df -> new FacturaVigenteExtendida(df.getFacturaVigente())).collect(Collectors.toList())) {
@@ -508,6 +517,14 @@ public class FacturasPeriodoController {
 					calculaMontoDepreciacionAcumuladaMensual(facturaVigente, periodo));
 		}
 		params.put("montoDepreciacionMensualAcumuladaPorFacturaId", montoDepreciacionMensualAcumuladaPorFacturaId);
+		Double sumaDepreciadas = declaracionFacturasDepreciadas.stream()
+				.map(f -> calculaMontoDepreciacionAcumuladaMensual(new FacturaVigenteExtendida(f.getFacturaVigente()),
+						periodo))
+				.reduce(0.0, (acc, c) -> acc + c);
+		Double sumaNoDepreciadas = facturasNoDepreciadas.stream().map(FacturaVigente::getMonto).reduce(0.0,
+				(acc, c) -> acc + c);
+		params.put("sumaNoDepreciadas", sumaNoDepreciadas);
+		params.put("sumaDepreciadas", sumaDepreciadas);
 
 		return new ModelAndView("visualizaDeclaracion", params);
 	}
