@@ -191,3 +191,10 @@ update factura set descripcion='IVA acreditable', folio='83' where id=121;
 update declaracion set tiempo_creacion=now()
 select * from declaracion_vigente
 select * from declaracion_factura
+
+select generatedAlias0 from factura as generatedAlias0 where ( generatedAlias0.rfc_emisor='CFC110121742') and ( generatedAlias0.folio='C1DCFFCF-6EF7-49A9-8A65-8D665547A74E')
+select rfc_emisor, folio from factura where rfc_emisor='CFC110121742'
+select * from monto_deducible_factura
+ALTER SEQUENCE monto_deducible_factura_id_seq RESTART WITH 242
+select * from factura order by periodo
+update factura set periodo='2019-05-27' where id=148;

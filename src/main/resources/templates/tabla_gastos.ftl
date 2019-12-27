@@ -47,7 +47,8 @@ table, th, td {
 
 					</td>
 				</tr>
-				</#items> <#else></#list>
+				</#items> <#else>
+				</#list>
 			</tbody>
 			<tfoot>
 				<tr>

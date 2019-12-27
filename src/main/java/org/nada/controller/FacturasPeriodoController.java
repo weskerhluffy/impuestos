@@ -290,6 +290,12 @@ public class FacturasPeriodoController {
 		LOGGER.debug("TMPH Ano de periodo {} es {}", ano, FORMATEADOR_FECHA.format(periodo));
 
 		LocalDate inicioAnoLocalDate = LocalDate.of(ano, 1, 1);
+		LocalDate inicioDepreciacion = inicioAnoLocalDate;
+
+		if (convertToLocalDateViaInstant(facturaVigente.getFechaInicioDepreciacion())
+				.compareTo(inicioAnoLocalDate) > 0) {
+			inicioDepreciacion = convertToLocalDateViaInstant(facturaVigente.getFechaInicioDepreciacion());
+		}
 		// @formatter:off
 		// XXX: https://stackoverflow.com/questions/23215299/how-to-convert-a-localdate-to-an-instant
 		// @formatter:on
@@ -298,8 +304,8 @@ public class FacturasPeriodoController {
 		// @formatter:off
 		// XXX: https://stackoverflow.com/questions/1086396/java-date-month-difference/34811261#34811261
 		// @formatter:on
-		var mesesTranscurridosDelAno = ChronoUnit.MONTHS.between(inicioAnoLocalDate, periodoLocalDate);
-		LOGGER.debug("TMPH Meses entre {} y {} son {}", inicioAnoLocalDate, periodoLocalDate, mesesTranscurridosDelAno);
+		var mesesTranscurridosDelAno = ChronoUnit.MONTHS.between(inicioDepreciacion, periodoLocalDate) + 1;
+		LOGGER.debug("TMPH Meses entre {} y {} son {}", inicioDepreciacion, periodoLocalDate, mesesTranscurridosDelAno);
 
 		return monto * mesesTranscurridosDelAno;
 	}
@@ -385,6 +391,7 @@ public class FacturasPeriodoController {
 				LOGGER.debug("TMPH la suma de todos los males {}", monto);
 
 				Factura factura = null;
+				LOGGER.debug("TMPH buscando rfc {} folio {}", rfc, folio);
 				try {
 					if ((factura = facturaDAO.findByRfcEmisorAndFolio(rfc, folio)) == null) {
 						factura = new Factura(rfc, razonSocial, descripcion, folio, periodo, ahora, ahora);
@@ -456,8 +463,9 @@ public class FacturasPeriodoController {
 			if (facturaVigente.getMonto() != facturaVigente2.getMonto()) {
 				MontoDeducibleFactura montoDeducibleFactura = new MontoDeducibleFactura(factura,
 						facturaVigente.getMonto(), tiempoCreacion, null);
-				LOGGER.debug("TMPH guardando datos monto {}", montoDeducibleFactura);
+				LOGGER.debug("TMPH guardando datos monto {}:{}", montoDeducibleFactura, montoDeducibleFactura.getId());
 				entityManager.persist(montoDeducibleFactura);
+				LOGGER.debug("TMPH guardados datos monto {}:{}", montoDeducibleFactura, montoDeducibleFactura.getId());
 			}
 		}
 		return "redirect:/modificaDepreciacion?periodo=" + FORMATEADOR_FECHA.format(periodo);
@@ -543,6 +551,15 @@ public class FacturasPeriodoController {
 				new FechaInicioDepreciacionFacturaEditor(entityManager));
 		binder.registerCustomEditor(PorcentajeDepreciacionAnualFactura.class,
 				new PorcentajeDepreciacionAnualFacturaEditor(entityManager));
+	}
+
+	// XXX: https://www.baeldung.com/java-date-to-localdate-and-localdatetime
+	public static LocalDate convertToLocalDateViaInstant(Date dateToConvert) {
+		return dateToConvert.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+	}
+
+	public static Date convertToDateViaInstant(LocalDate dateToConvert) {
+		return java.util.Date.from(dateToConvert.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
 	}
 }
 
