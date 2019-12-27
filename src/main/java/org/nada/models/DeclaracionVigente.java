@@ -1,16 +1,15 @@
 package org.nada.models;
-// Generated 21 may 2019 5:24:53 by Hibernate Tools 5.2.5.Final
+// Generated 26 dic 2019 20:41:46 by Hibernate Tools 5.2.5.Final
 
 
-import java.util.Date;
 import java.util.Set;
-
+import javax.persistence.OneToMany;
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -102,6 +101,7 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 		this.declaracionFacturas = declaracionFacturas;
 	}
 
+        
 		
   // end of extra code specified in the hbm.xml files
 

@@ -1,5 +1,5 @@
 package org.nada.models;
-// Generated 21 may 2019 5:28:47 by Hibernate Tools 5.2.5.Final
+// Generated 26 dic 2019 20:41:46 by Hibernate Tools 5.2.5.Final
 
 
 import java.util.Date;
@@ -36,6 +36,7 @@ public class Factura  implements java.io.Serializable {
      private Date periodo;
      private Date fechaCreacion;
      private Date fechaUltimaModificacion;
+     private Set<ConceptoFactura> conceptoFacturas = new HashSet<ConceptoFactura>(0);
      private Set<DeclaracionFactura> declaracionFacturas = new HashSet<DeclaracionFactura>(0);
      private Set<MontoDeducibleFactura> montoDeducibleFacturas = new HashSet<MontoDeducibleFactura>(0);
      private Set<FechaInicioDepreciacionFactura> fechaInicioDepreciacionFacturas = new HashSet<FechaInicioDepreciacionFactura>(0);
@@ -55,7 +56,7 @@ public class Factura  implements java.io.Serializable {
         this.fechaCreacion = fechaCreacion;
         this.fechaUltimaModificacion = fechaUltimaModificacion;
     }
-    public Factura(String rfcEmisor, String razonSocialEmisor, String descripcion, String folio, Date periodo, Date fechaCreacion, Date fechaUltimaModificacion, Set<DeclaracionFactura> declaracionFacturas, Set<MontoDeducibleFactura> montoDeducibleFacturas, Set<FechaInicioDepreciacionFactura> fechaInicioDepreciacionFacturas, Set<MontoFactura> montoFacturas, Set<PorcentajeDepreciacionAnualFactura> porcentajeDepreciacionAnualFacturas) {
+    public Factura(String rfcEmisor, String razonSocialEmisor, String descripcion, String folio, Date periodo, Date fechaCreacion, Date fechaUltimaModificacion, Set<ConceptoFactura> conceptoFacturas, Set<DeclaracionFactura> declaracionFacturas, Set<MontoDeducibleFactura> montoDeducibleFacturas, Set<FechaInicioDepreciacionFactura> fechaInicioDepreciacionFacturas, Set<MontoFactura> montoFacturas, Set<PorcentajeDepreciacionAnualFactura> porcentajeDepreciacionAnualFacturas) {
        this.rfcEmisor = rfcEmisor;
        this.razonSocialEmisor = razonSocialEmisor;
        this.descripcion = descripcion;
@@ -63,6 +64,7 @@ public class Factura  implements java.io.Serializable {
        this.periodo = periodo;
        this.fechaCreacion = fechaCreacion;
        this.fechaUltimaModificacion = fechaUltimaModificacion;
+       this.conceptoFacturas = conceptoFacturas;
        this.declaracionFacturas = declaracionFacturas;
        this.montoDeducibleFacturas = montoDeducibleFacturas;
        this.fechaInicioDepreciacionFacturas = fechaInicioDepreciacionFacturas;
@@ -150,6 +152,15 @@ public class Factura  implements java.io.Serializable {
     
     public void setFechaUltimaModificacion(Date fechaUltimaModificacion) {
         this.fechaUltimaModificacion = fechaUltimaModificacion;
+    }
+
+@OneToMany(fetch=FetchType.LAZY, mappedBy="factura")
+    public Set<ConceptoFactura> getConceptoFacturas() {
+        return this.conceptoFacturas;
+    }
+    
+    public void setConceptoFacturas(Set<ConceptoFactura> conceptoFacturas) {
+        this.conceptoFacturas = conceptoFacturas;
     }
 
 @OneToMany(fetch=FetchType.LAZY, mappedBy="factura")
