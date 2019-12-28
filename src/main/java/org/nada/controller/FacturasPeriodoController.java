@@ -9,6 +9,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import javax.management.RuntimeErrorException;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.xml.bind.JAXBContext;
@@ -43,6 +45,7 @@ import org.nada.dao.DeclaracionVigenteDAO;
 import org.nada.dao.FacturaDAO;
 import org.nada.dao.FacturaVigenteDAO;
 import org.nada.dao.MontoFacturaDAO;
+import org.nada.models.ConceptoFactura;
 import org.nada.models.Declaracion;
 import org.nada.models.DeclaracionFactura;
 import org.nada.models.DeclaracionVigente;
@@ -50,6 +53,7 @@ import org.nada.models.Factura;
 import org.nada.models.FacturaVigente;
 import org.nada.models.FacturaVigenteExtendida;
 import org.nada.models.FechaInicioDepreciacionFactura;
+import org.nada.models.ImpuestosConceptoFactura;
 import org.nada.models.MontoDeducibleFactura;
 import org.nada.models.MontoFactura;
 import org.nada.models.PorcentajeDepreciacionAnualFactura;
@@ -86,6 +90,7 @@ public class FacturasPeriodoController {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FacturasPeriodoController.class);
 	private static final String UPLOADING_DIR = System.getProperty("user.dir") + "/uploadingDir/";
 	private static final SimpleDateFormat FORMATEADOR_FECHA = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+	private static final Unmarshaller jaxbUnmarshaller = generaXmlParser();
 
 	private final FacturaVigenteDAO facturaVigenteDAO;
 	private final EntityManager entityManager;
@@ -341,9 +346,7 @@ public class FacturasPeriodoController {
 			LOGGER.debug("TMPH arch temp {} existe {}", file, Files.exists(file.toPath()));
 			uploadedFile.transferTo(file);
 
-			JAXBContext jaxbContext;
-			jaxbContext = JAXBContext.newInstance(Comprobante.class);
-			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+			// XXX: https://howtodoinjava.com/jaxb/read-xml-to-java-object/
 			Comprobante comprobante = (Comprobante) jaxbUnmarshaller.unmarshal(file);
 
 			var rfc = comprobante.getEmisor().getRfc();
@@ -353,6 +356,7 @@ public class FacturasPeriodoController {
 			Element timbre = null;
 			for (int i = 0; i < complemento.size(); i++) {
 				for (Object complementoObj : complemento.get(i).getAny()) {
+					// XXX: https://dzone.com/articles/jaxbs-xmlanyelementlaxtrue
 					var hijo = (Element) complementoObj;
 					LOGGER.debug("TMPH nombre {}", hijo.getNodeName());
 					if (StringUtils.equals("tfd:TimbreFiscalDigital", hijo.getNodeName())) {
@@ -369,12 +373,16 @@ public class FacturasPeriodoController {
 			for (Concepto concepto : conceptos) {
 				LOGGER.debug("TMPH elc oncep {}:{}", concepto.getDescripcion(), concepto.getImporte());
 			}
-			var descripcion = String.join(";;;", conceptos.stream().map(c -> String.format("%s->%s", c, c))
-					.collect(Collectors.toUnmodifiableList()));
+
+			var descripcion = String.join(";;;",
+					conceptos.stream()
+							.map(c -> String.format("%s->%s", c.getDescripcion(),
+									c.getImporte().doubleValue() - obtenValor(c.getDescuento())))
+							.collect(Collectors.toUnmodifiableList()));
 
 			LOGGER.debug("TMPH la descripcion global {}", descripcion);
 
-			var monto = conceptos.stream().map(c -> c.getImporte())
+			var monto = conceptos.stream().map(c -> c.getImporte().doubleValue() - obtenValor(c.getDescuento()))
 					.collect(Collectors.summingDouble(i -> i.doubleValue()));
 			LOGGER.debug("TMPH la suma de todos los males {}", monto);
 
@@ -388,6 +396,22 @@ public class FacturasPeriodoController {
 					MontoFactura montoFactura = new MontoFactura(factura, monto, ahora, null);
 					montoFactura = montoFacturaDAO.save(montoFactura);
 					LOGGER.debug("TMPH se dio de alta monto {}", montoFactura);
+
+					for (Concepto concepto : conceptos) {
+						ConceptoFactura conceptoFactura = new ConceptoFactura(factura, concepto.getClaveProdServ(),
+								concepto.getCantidad().doubleValue(), concepto.getClaveUnidad(),
+								concepto.getDescripcion(), concepto.getValorUnitario().doubleValue(),
+								concepto.getImporte().doubleValue(), concepto.getDescuento().doubleValue(), ahora,
+								null);
+						entityManager.persist(conceptoFactura);
+						for (var impuesto : concepto.getImpuestos().getTraslados().getTraslado()) {
+							ImpuestosConceptoFactura impuestosConceptoFactura = new ImpuestosConceptoFactura(
+									conceptoFactura, impuesto.getBase().doubleValue(), impuesto.getImpuesto(),
+									impuesto.getTipoFactor().value(), impuesto.getTasaOCuota().doubleValue(),
+									impuesto.getImporte().doubleValue(), "trasladado");
+							entityManager.persist(impuestosConceptoFactura);
+						}
+					}
 
 				} else {
 					LOGGER.debug("factura {} ya existia", factura);
@@ -548,6 +572,22 @@ public class FacturasPeriodoController {
 	public static Date convertToDateViaInstant(LocalDate dateToConvert) {
 		return java.util.Date.from(dateToConvert.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
 	}
+
+	// XXX:
+	// https://stackoverflow.com/questions/19650917/how-to-convert-bigdecimal-to-double-in-java
+	public static Double obtenValor(BigDecimal valor) {
+		return valor != null ? valor.doubleValue() : 0;
+	}
+
+	private static Unmarshaller generaXmlParser() {
+		// XXX: https://howtodoinjava.com/jaxb/read-xml-to-java-object/
+		try {
+			return JAXBContext.newInstance(Comprobante.class).createUnmarshaller();
+		} catch (JAXBException e) {
+			LOGGER.error("No se pudo generar parse de factura {}",ExceptionUtils.getStackTrace(e));
+			throw new Error(e);
+		}
+	}
 }
 
 // XXX: https://www.baeldung.com/spring-mvc-custom-property-editor
@@ -638,6 +678,7 @@ class ModeloFacturaEditorImpl<T> extends PropertyEditorSupport implements Modelo
 			setValue(modelo);
 		}
 	}
+
 }
 
 class DeclaracionFacturasContainer {

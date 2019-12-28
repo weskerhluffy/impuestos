@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Show message</title>
+<title>Modifica montos</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style type="text/css">
@@ -48,18 +48,92 @@ td {
 					</td>
 					<td>${factura.rfcEmisor}</td>
 					<td>${factura.razonSocialEmisor}</td>
-					<td>${factura.descripcion}</td>
+					<td>${factura.descripcion}
+
+
+
+						<div>
+							<p>Conceptos</p>
+							<table>
+								<thead>
+									<tr>
+										<th>Descripcion</th>
+										<th>Importe</th>
+										<th>Descuento</th>
+										<th>A pagar</th>
+										<th>Impuestos</th>
+									</tr>
+								</thead>
+								<tbody>
+									<#assign totalConceptos=0> 
+									<#list
+										factura.factura.conceptoFacturas> <#items as concepto>
+									<tr>
+									
+									<#assign aPagar=concepto.importe-(concepto.descuento!0)> 
+										<td>${concepto.descripcion}</td>
+										<td>${concepto.importe}</td>
+										<td>${concepto.descuento!0}</td>
+										<td>${aPagar}</td>
+										<td>
+											<table>
+												<thead>
+													<tr>
+														<th>Base</th>
+														<th>Tasa</th>
+														<th>Importe</th>
+													</tr>
+												</thead>
+												<tbody>
+													<#assign totalImporte=0> <#list
+														concepto.impuestosConceptoFacturas> <#items as
+														impuesto>
+													<tr>
+														<td>${impuesto.base}</td>
+														<td>${impuesto.tasaCuota}</td>
+														<td>${impuesto.importe}</td>
+													</tr>
+													<#assign totalImporte +=impuesto.importe></#items> <#else></#list>
+												</tbody>
+												<tfoot>
+													<tr>
+														<td>Total:</td>
+														<td></td>
+														<td>${totalImporte}</td>
+													</tr>
+												</tfoot>
+											</table>
+										</td>
+									</tr>
+									<#assign
+										totalConceptos+=aPagar></#items>
+									<#else></#list>
+								</tbody>
+								<tfoot>
+									<tr>
+										<td>Total:</td>
+										<td></td>
+										<td></td>
+										<td>${totalConceptos}</td>
+										<td></td>
+									</tr>
+								</tfoot>
+							</table>
+						</div>
+					</td>
 					<td>${factura.folio}</td>
 					<!-- XXX: https://stackoverflow.com/questions/30130140/freemarker-is-there-a-way-to-format-an-integer-as-a-floating-point-number -->
 					<td class="numerico"><input class="numerico" type="text"
 						name="facturas[${factura?index}].monto" size="20"
-						value="${factura.monto?string(",##0.0;; decimalSeparator='.' groupingSeparator=' '")}" /></td>
+						value="${factura.monto?string(" ,##0.0;; decimalSeparator='.'
+						groupingSeparator=' ' ")}" /></td>
 					<td class="numerico"><input class="numerico" type="text"
 						name="facturas[${factura?index}].porcentaje" size="20"
-						value="${(factura.porcentaje?string(",##0.0;; decimalSeparator='.' groupingSeparator=' '"))!''}" /></td>
+						value="${(factura.porcentaje?string("
+						,##0.0;; decimalSeparator='.' groupingSeparator=' ' "))!''}" /></td>
 					<td><input type="text"
 						name="facturas[${factura?index}].fechaInicioDepreciacion"
-						value="${(factura.fechaInicioDepreciacion?string["yyyy-MM-dd"])!''}" />
+						value="${(factura.fechaInicioDepreciacion?string[" yyyy-MM-dd"])!''}" />
 					</td>
 					<td>${factura.periodo?string["yyyy-MM-dd"]}</td>
 				</tr>
@@ -80,8 +154,8 @@ td {
 			</tfoot>
 		</table>
 
-		<input type="submit" value="Submitear" />
-		<input type="hidden" value="${periodo?string["yyyy-MM-dd"]}" name="periodo"/>
+		<input type="submit" value="Submitear" /> <input type="hidden"
+			value="${periodo?string[" yyyy-MM-dd"]}" name="periodo" />
 	</form>
 
 </body>

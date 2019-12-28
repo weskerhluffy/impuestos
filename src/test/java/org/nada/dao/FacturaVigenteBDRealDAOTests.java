@@ -76,6 +76,7 @@ public class FacturaVigenteBDRealDAOTests {
 					FECHA_INICIAL_LOCAL_DATE.plusMonths(i).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
 			// XXX:
 			// https://stackoverflow.com/questions/6389827/string-variable-interpolation-java
+			/*
 			Factura factura = new Factura(String.format("rfc%02d", i), String.format("folio_%02d", i), fechaInicial,
 					fechaInicial, fechaInicial);
 			Integer facturaId = (Integer) entityManager.persistAndGetId(factura);
@@ -104,6 +105,7 @@ public class FacturaVigenteBDRealDAOTests {
 			}
 
 			facturas.add(factura);
+*/
 		}
 		entityManager.flush();
 	}
@@ -127,6 +129,7 @@ public class FacturaVigenteBDRealDAOTests {
 		}
 	}
 
+	/*
 	@Test
 	public void testVigenteSinDepreciacion() {
 		Date ahora = new Date();
@@ -149,7 +152,7 @@ public class FacturaVigenteBDRealDAOTests {
 		assertNull(facturaVigente.getPorcentaje());
 		assertNull(facturaVigente.getFechaInicioDepreciacion());
 	}
-
+*/
 	@Test
 	public void pruebaFacturasDepreciadas() throws ParseException {
 		Integer deltaMeses = 4;
