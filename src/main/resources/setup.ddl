@@ -183,6 +183,31 @@ WHERE  ( Mesdif(Date('2019-01-01'), Coalesce(f.fecha_inicio_depreciacion, Date('
            Date('2019-01-01'))) < f.monto 
 ORDER  BY f.periodo 
  
+drop table if exists concepto_factura cascade;
+CREATE TABLE concepto_factura (
+ id serial PRIMARY KEY,
+ id_factura INTEGER not null REFERENCES factura(id),
+ clave_producto_o_servicio VARCHAR (100),
+ cantidad float not null,
+ clave_unidad varchar (10) not null,
+ descripcion text,
+ valor_unitario float not null,
+ importe float not null,
+ descuento float not null,
+ tiempo_creacion timestamp default CURRENT_DATE
+);
+
+drop table if exists impuestos_concepto_factura cascade;
+CREATE TABLE impuestos_concepto_factura(
+ id serial PRIMARY KEY,
+ id_concepto INTEGER not null REFERENCES concepto_factura(id),
+ base float not null,
+ impuesto varchar (10) not null,
+ tipo_factor VARCHAR (255),
+ tasa_cuota float not null,
+ importe float not null,
+ tipo VARCHAR (255)
+);
 
 SELECT f.* FROM   factura_vigente f WHERE  ( Mesdif(:periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) > 0 OR Mismo_periodo(f.fecha_inicio_depreciacion, date('2019-01-01')) ) AND ( ( ( f.monto * ( Coalesce(f.porcentaje, 0) / 100 ) ) / 12 ) + 0.005 ) * Mesdif( :periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) < f.monto ORDER  BY f.periodo 
 

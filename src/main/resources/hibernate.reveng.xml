@@ -99,6 +99,10 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 	</table>
 	<table schema="public" name="declaracion_factura">
 		<meta attribute="extra-import">org.apache.commons.lang3.builder.ToStringBuilder</meta>
+		<meta attribute="extra-import">org.nada.models.FacturaVigente</meta>
+		<meta attribute="extra-import">org.nada.models.FacturaVigenteExtendida</meta>
+		<meta attribute="extra-import">javax.persistence.OneToOne</meta>
+		<meta attribute="extra-import">javax.persistence.Transient</meta>
 		<meta attribute="class-code">
         <![CDATA[
 // Aca nomas probando controla la autodegeneracion con <<class-code >>
@@ -117,6 +121,29 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 		this.declaracionVigente = declaracionVigente;
 	}
 
+private FacturaVigente facturaVigente;
+	private FacturaVigenteExtendida facturaVigenteExtendida;
+
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id_factura", updatable = false, insertable = false)
+	public FacturaVigente getFacturaVigente() {
+		return facturaVigente;
+	}
+
+	public void setFacturaVigente(FacturaVigente facturaVigente) {
+		this.facturaVigente = facturaVigente;
+	}
+        
+		
+  // end of extra code specified in the hbm.xml files
+
+	@Transient
+	public FacturaVigenteExtendida getFacturaVigenteExtendida() {
+		if (facturaVigenteExtendida == null) {
+			facturaVigenteExtendida = new FacturaVigenteExtendida(getFacturaVigente());
+		}
+		return facturaVigenteExtendida;
+	}
 
 
         ]]>
@@ -164,6 +191,18 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 	</table>
 
 	<table schema="public" name="declaracion">
+		<primary-key>
+			<generator class="identity"></generator>
+			<key-column name="id" />
+		</primary-key>
+	</table>
+	<table schema="public" name="concepto_factura">
+		<primary-key>
+			<generator class="identity"></generator>
+			<key-column name="id" />
+		</primary-key>
+	</table>
+	<table schema="public" name="impuestos_concepto_factura">
 		<primary-key>
 			<generator class="identity"></generator>
 			<key-column name="id" />

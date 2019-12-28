@@ -92,12 +92,6 @@
 			<version>1.4.11.1</version>
 		</dependency>
 
-		<dependency>
-			<groupId>org.nada</groupId>
-			<artifactId>cfdi</artifactId>
-			<version>3.2</version>
-		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/org.apache.xmlbeans/xmlbeans -->
 		<dependency>
 			<groupId>org.apache.xmlbeans</groupId>
@@ -111,8 +105,23 @@
 			<artifactId>guava</artifactId>
 			<version>27.1-jre</version>
 		</dependency>
-
-
+		<dependency>
+			<groupId>com.sun.activation</groupId>
+			<artifactId>javax.activation</artifactId>
+			<version>1.2.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
+		<dependency>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+			<version>2.3.0-b170201.1204</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.glassfish.jaxb/jaxb-runtime -->
+		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+			<version>2.3.0-b170127.1453</version>
+		</dependency>
 
 	</dependencies>
 
@@ -231,6 +240,7 @@
 					<release>12</release>
 					<source>1.12</source>
 					<target>1.12</target>
+					<debuglevel>lines,vars,source</debuglevel>
 				</configuration>
 			</plugin>
 			<plugin>

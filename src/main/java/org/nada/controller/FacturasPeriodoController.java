@@ -30,6 +30,9 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -66,14 +69,16 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.w3c.dom.DOMException;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 import com.opencsv.CSVReader;
 
-import mx.gob.sat.cfd.x3.ComprobanteDocument;
-import mx.gob.sat.cfd.x3.ComprobanteDocument.Comprobante.Conceptos.Concepto;
+import mx.gob.sat.cfd._3.*;
+import mx.gob.sat.cfd._3.Comprobante.Complemento;
+import mx.gob.sat.cfd._3.Comprobante.Conceptos.Concepto;
 
 // XXX: http://zetcode.com/springboot/controller/
 @Controller
@@ -327,7 +332,7 @@ public class FacturasPeriodoController {
 	@Transactional
 	@PostMapping(value = "/subeXml")
 	public String uploadingPost(@RequestParam("uploadingFiles") MultipartFile[] uploadingFiles)
-			throws IOException, DOMException, ParseException {
+			throws IOException, DOMException, ParseException, JAXBException {
 		Date ahora = new Date();
 		for (MultipartFile uploadedFile : uploadingFiles) {
 			File file = new File(UPLOADING_DIR + uploadedFile.getOriginalFilename());
@@ -336,82 +341,64 @@ public class FacturasPeriodoController {
 			LOGGER.debug("TMPH arch temp {} existe {}", file, Files.exists(file.toPath()));
 			uploadedFile.transferTo(file);
 
-			ComprobanteDocument comprobanteDocument = null;
-			try {
-				comprobanteDocument = ComprobanteDocument.Factory.parse(file);
-			} catch (XmlException e) {
-				LOGGER.error("No se pudo parsear {} error {}", file, ExceptionUtils.getStackTrace(e));
-			}
+			JAXBContext jaxbContext;
+			jaxbContext = JAXBContext.newInstance(Comprobante.class);
+			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+			Comprobante comprobante = (Comprobante) jaxbUnmarshaller.unmarshal(file);
 
-			if (comprobanteDocument != null) {
+			var rfc = comprobante.getEmisor().getRfc();
+			var razonSocial = comprobante.getEmisor().getNombre();
 
-				var atributos = comprobanteDocument.getComprobante().getEmisor().getDomNode().getAttributes();
-				var numeroAtributos = atributos.getLength();
-				for (Integer i = 0; i < numeroAtributos; i++) {
-					var atributo = atributos.item(i);
-					LOGGER.debug("TMPH el echizo {}:{}", atributo.getNodeName(), atributo.getNodeValue());
-				}
-				var rfc = atributos.getNamedItem("Rfc").getNodeValue();
-				var razonSocial = atributos.getNamedItem("Nombre").getNodeValue();
-
-				var complemento = comprobanteDocument.getComprobante().getComplemento();
-				var numeroHijosComplemento = complemento.getDomNode().getChildNodes().getLength();
-				Node timbre = null;
-				for (int i = 0; i < numeroHijosComplemento; i++) {
-					var hijo = complemento.getDomNode().getChildNodes().item(i);
+			var complemento = comprobante.getComplemento();
+			Element timbre = null;
+			for (int i = 0; i < complemento.size(); i++) {
+				for (Object complementoObj : complemento.get(i).getAny()) {
+					var hijo = (Element) complementoObj;
 					LOGGER.debug("TMPH nombre {}", hijo.getNodeName());
 					if (StringUtils.equals("tfd:TimbreFiscalDigital", hijo.getNodeName())) {
 						timbre = hijo;
 					}
 				}
-				var folio = timbre.getAttributes().getNamedItem("UUID").getNodeValue();
+			}
+			var folio = timbre.getAttributes().getNamedItem("UUID").getNodeValue();
 //				LOGGER.debug("TMPH el timbre {}:{}", folio.getNodeName(), folio.getNodeValue());
-				var periodo = FORMATEADOR_FECHA
-						.parse(timbre.getAttributes().getNamedItem("FechaTimbrado").getNodeValue());
+			var periodo = FORMATEADOR_FECHA.parse(timbre.getAttributes().getNamedItem("FechaTimbrado").getNodeValue());
 //				LOGGER.debug("TMPH la fecha {}:{}", periodo.getNodeName(), periodo.getNodeValue());
 
-				var conceptos = comprobanteDocument.getComprobante().getConceptos();
-				for (Concepto concepto : conceptos.getConceptoArray()) {
-					var atributosConcepto = concepto.getDomNode().getAttributes();
-					LOGGER.debug("TMPH elc oncep {}:{}", atributosConcepto.getNamedItem("Descripcion").getNodeValue(),
-							atributosConcepto.getNamedItem("Importe").getNodeValue());
+			var conceptos = comprobante.getConceptos().getConcepto();
+			for (Concepto concepto : conceptos) {
+				LOGGER.debug("TMPH elc oncep {}:{}", concepto.getDescripcion(), concepto.getImporte());
+			}
+			var descripcion = String.join(";;;", conceptos.stream().map(c -> String.format("%s->%s", c, c))
+					.collect(Collectors.toUnmodifiableList()));
+
+			LOGGER.debug("TMPH la descripcion global {}", descripcion);
+
+			var monto = conceptos.stream().map(c -> c.getImporte())
+					.collect(Collectors.summingDouble(i -> i.doubleValue()));
+			LOGGER.debug("TMPH la suma de todos los males {}", monto);
+
+			Factura factura = null;
+			LOGGER.debug("TMPH buscando rfc {} folio {}", rfc, folio);
+			try {
+				if ((factura = facturaDAO.findByRfcEmisorAndFolio(rfc, folio)) == null) {
+					factura = new Factura(rfc, razonSocial, descripcion, folio, periodo, ahora, ahora);
+					LOGGER.debug("TMPH factura nueva kedo {}", factura);
+					factura = facturaDAO.save(factura);
+					MontoFactura montoFactura = new MontoFactura(factura, monto, ahora, null);
+					montoFactura = montoFacturaDAO.save(montoFactura);
+					LOGGER.debug("TMPH se dio de alta monto {}", montoFactura);
+
+				} else {
+					LOGGER.debug("factura {} ya existia", factura);
 				}
-				var descripcion = String.join(";;;",
-						Arrays.stream(conceptos.getConceptoArray())
-								.map(c -> String.format("%s->%s",
-										c.getDomNode().getAttributes().getNamedItem("Descripcion").getNodeValue(),
-										c.getDomNode().getAttributes().getNamedItem("Importe").getNodeValue()))
-								.collect(Collectors.toUnmodifiableList()));
 
-				LOGGER.debug("TMPH la descripcion global {}", descripcion);
-
-				var monto = Arrays.stream(conceptos.getConceptoArray())
-						.map(c -> c.getDomNode().getAttributes().getNamedItem("Importe").getNodeValue())
-						.collect(Collectors.summingDouble(i -> Double.valueOf(i)));
-				LOGGER.debug("TMPH la suma de todos los males {}", monto);
-
-				Factura factura = null;
-				LOGGER.debug("TMPH buscando rfc {} folio {}", rfc, folio);
-				try {
-					if ((factura = facturaDAO.findByRfcEmisorAndFolio(rfc, folio)) == null) {
-						factura = new Factura(rfc, razonSocial, descripcion, folio, periodo, ahora, ahora);
-						LOGGER.debug("TMPH factura nueva kedo {}", factura);
-						factura = facturaDAO.save(factura);
-						MontoFactura montoFactura = new MontoFactura(factura, monto, ahora, null);
-						montoFactura = montoFacturaDAO.save(montoFactura);
-						LOGGER.debug("TMPH se dio de alta monto {}", montoFactura);
-
-					} else {
-						LOGGER.debug("factura {} ya existia", factura);
-					}
-
-				} catch (RuntimeException e) {
-					// @formatter:off
+			} catch (RuntimeException e) {
+				// @formatter:off
 					// XXX: https://stackoverflow.com/questions/40301779/how-to-handle-a-psqlexception-in-java
 					// @formatter:on
 
-					LOGGER.error("Factura {} ya esta dada de alta {}", factura, ExceptionUtils.getStackTrace(e));
-				}
+				LOGGER.error("Factura {} ya esta dada de alta {}", factura, ExceptionUtils.getStackTrace(e));
 			}
 
 		}
