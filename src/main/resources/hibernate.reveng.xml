@@ -46,6 +46,16 @@
 // Aca nomas probando controla la autodegeneracion con <<class-code >>
 // TODO: https://stackoverflow.com/questions/2653268/what-are-the-shortcut-to-auto-generating-tostring-method-in-eclipse
 public String toString() { return ToStringBuilder.reflectionToString(this); }
+
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id", updatable = false, insertable = false)
+	public Factura getFactura() {
+		return factura;
+	}
+
+	public void setFactura(Factura factura) {
+		this.factura = factura;
+	}
         ]]>
 		</meta>
 		<primary-key>

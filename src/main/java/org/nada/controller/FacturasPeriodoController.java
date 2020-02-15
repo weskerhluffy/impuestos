@@ -8,20 +8,16 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +25,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import javax.management.RuntimeErrorException;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.xml.bind.JAXBContext;
@@ -40,7 +35,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.xmlbeans.XmlException;
 import org.nada.dao.DeclaracionVigenteDAO;
 import org.nada.dao.FacturaDAO;
 import org.nada.dao.FacturaVigenteDAO;
@@ -60,7 +54,6 @@ import org.nada.models.PorcentajeDepreciacionAnualFactura;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.GenericTypeResolver;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.WebDataBinder;
@@ -74,14 +67,12 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 import com.opencsv.CSVReader;
 
-import mx.gob.sat.cfd._3.*;
-import mx.gob.sat.cfd._3.Comprobante.Complemento;
+import mx.gob.sat.cfd._3.Comprobante;
 import mx.gob.sat.cfd._3.Comprobante.Conceptos.Concepto;
 
 // XXX: http://zetcode.com/springboot/controller/
@@ -200,11 +191,13 @@ public class FacturasPeriodoController {
 				for (Map.Entry<Class<?>, Map<Integer, String>> entry : nombresPropiedades.entrySet()) {
 					Class<?> clase = entry.getKey();
 					Map<Integer, String> nombresPropiedadesPorIndice = entry.getValue();
-					// XXX:
-					// https://stackoverflow.com/questions/13692700/good-way-to-get-any-value-from-a-java-set
+					// @formatter:off
+					// XXX: https://stackoverflow.com/questions/13692700/good-way-to-get-any-value-from-a-java-set
+					// @formatter:on
 					Integer indiceCualquiera = nombresPropiedadesPorIndice.keySet().iterator().next();
-					// XXX:
-					// https://stackoverflow.com/questions/14721397/checking-if-a-string-is-empty-or-null-in-java/14721414
+					// @formatter:off
+					// XXX: https://stackoverflow.com/questions/14721397/checking-if-a-string-is-empty-or-null-in-java/14721414
+					// @formatter:on
 					if (!StringUtils.isEmpty(line[indiceCualquiera])) {
 						// XXX:
 						// https://stackoverflow.com/questions/46393863/what-to-use-instead-of-class-newinstance
@@ -401,8 +394,7 @@ public class FacturasPeriodoController {
 						ConceptoFactura conceptoFactura = new ConceptoFactura(factura, concepto.getClaveProdServ(),
 								concepto.getCantidad().doubleValue(), concepto.getClaveUnidad(),
 								concepto.getDescripcion(), concepto.getValorUnitario().doubleValue(),
-								concepto.getImporte().doubleValue(), concepto.getDescuento().doubleValue(), ahora,
-								null);
+								concepto.getImporte().doubleValue(), obtenValor(concepto.getDescuento()), ahora, null);
 						entityManager.persist(conceptoFactura);
 						for (var impuesto : concepto.getImpuestos().getTraslados().getTraslado()) {
 							ImpuestosConceptoFactura impuestosConceptoFactura = new ImpuestosConceptoFactura(
@@ -584,7 +576,7 @@ public class FacturasPeriodoController {
 		try {
 			return JAXBContext.newInstance(Comprobante.class).createUnmarshaller();
 		} catch (JAXBException e) {
-			LOGGER.error("No se pudo generar parse de factura {}",ExceptionUtils.getStackTrace(e));
+			LOGGER.error("No se pudo generar parse de factura {}", ExceptionUtils.getStackTrace(e));
 			throw new Error(e);
 		}
 	}

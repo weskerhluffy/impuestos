@@ -37,6 +37,8 @@ td {
 					<th>Monto deducible</th>
 					<th>Porcentaje de depreciacion</th>
 					<th>Fecha de inicio de depreciacion</th>
+					<th>IVA total</th>
+					<th>IVA de monto deducible</th>
 					<th>Periodo inicial</th>
 				</tr>
 			</thead>
@@ -51,9 +53,10 @@ td {
 					<td>${factura.descripcion}
 
 
-
+<#assign totalImpuestos=0>
+<#if factura.factura.conceptoFacturas?size gt 0 >
 						<div>
-							<p>Conceptos</p>
+							<p>Conceptos:</p>
 							<table>
 								<thead>
 									<tr>
@@ -66,11 +69,11 @@ td {
 								</thead>
 								<tbody>
 									<#assign totalConceptos=0> 
-									<#list
-										factura.factura.conceptoFacturas> <#items as concepto>
+									<#list factura.factura.conceptoFacturas> <#items as
+										concepto>
 									<tr>
-									
-									<#assign aPagar=concepto.importe-(concepto.descuento!0)> 
+
+										<#assign aPagar=concepto.importe-(concepto.descuento!0)>
 										<td>${concepto.descripcion}</td>
 										<td>${concepto.importe}</td>
 										<td>${concepto.descuento!0}</td>
@@ -100,14 +103,13 @@ td {
 														<td>Total:</td>
 														<td></td>
 														<td>${totalImporte}</td>
+														<#assign totalImpuestos+=totalImporte>
 													</tr>
 												</tfoot>
 											</table>
 										</td>
 									</tr>
-									<#assign
-										totalConceptos+=aPagar></#items>
-									<#else></#list>
+									<#assign totalConceptos+=aPagar></#items> <#else></#list>
 								</tbody>
 								<tfoot>
 									<tr>
@@ -120,6 +122,9 @@ td {
 								</tfoot>
 							</table>
 						</div>
+						
+<#else>
+</#if>
 					</td>
 					<td>${factura.folio}</td>
 					<!-- XXX: https://stackoverflow.com/questions/30130140/freemarker-is-there-a-way-to-format-an-integer-as-a-floating-point-number -->
@@ -135,6 +140,14 @@ td {
 						name="facturas[${factura?index}].fechaInicioDepreciacion"
 						value="${(factura.fechaInicioDepreciacion?string[" yyyy-MM-dd"])!''}" />
 					</td>
+					<td>${totalImpuestos}</td>
+					<td>
+<#if factura.factura.conceptoFacturas?size gt 0 >
+					${factura.monto*0.16}
+<#else>
+0
+</#if>
+					</td>
 					<td>${factura.periodo?string["yyyy-MM-dd"]}</td>
 				</tr>
 				</#items> <#else></#list>
@@ -142,6 +155,8 @@ td {
 			<tfoot>
 				<tr>
 					<td>Total:</td>
+					<td></td>
+					<td></td>
 					<td></td>
 					<td></td>
 					<td></td>

@@ -24,10 +24,13 @@ table, th, td {
 					<th>Descripcion</th>
 					<th>Folio</th>
 					<th>Monto deducible</th>
+					<th>IVA</th>
 				</tr>
 			</thead>
 			<tbody>
-				<#list facturasNoDepreciadas> <#items as factura>
+				<#assign ivaTotal=0> 
+				<#list facturasNoDepreciadas>
+				<#items as factura>
 				<tr>
 					<td>${factura.id}</td>
 					<td>${factura.rfcEmisor}</td>
@@ -44,11 +47,21 @@ table, th, td {
 						value="${factura.id}" /> <input type="hidden"
 						name="declaracionFacturasNoDepreciadas[${factura?index}].montoDeducibleFactura"
 						value="${factura.idMontoDeducible}" />
+						
+					<td>
+					
+				<#assign ivaActual=0> 
+<#if factura.factura.conceptoFacturas?has_content >
+				<#assign ivaActual=factura.monto*0.16> 
+							
+<#else>
+</#if>
+					${ivaActual} <#assign
+							ivaTotal+=ivaActual>
+							</td>
 
-					</td>
 				</tr>
-				</#items> <#else>
-				</#list>
+				</#items> <#else></#list>
 			</tbody>
 			<tfoot>
 				<tr>
@@ -58,6 +71,7 @@ table, th, td {
 					<td></td>
 					<td></td>
 					<td style="text-align: right;">${sumaNoDepreciadas}</td>
+					<td style="text-align: right;">${ivaTotal}</td>
 				</tr>
 			</tfoot>
 		</table>
@@ -76,10 +90,12 @@ table, th, td {
 					<th>Periodo inicial</th>
 					<th>Depreciacion mensual</th>
 					<th>Depreciacion mensual acumulada</th>
+					<th>IVA</th>
 				</tr>
 			</thead>
 			<tbody>
-				<#list facturasDepreciadas> <#items as factura>
+				<#assign ivaTotalDepreciacion=0> <#list
+					facturasDepreciadas> <#items as factura>
 				<tr>
 					<td>${factura.id}</td>
 					<td>${factura.rfcEmisor}</td>
@@ -101,7 +117,8 @@ table, th, td {
 						name="declaracionFacturasDepreciadas[${factura?index}].factura"
 						value="${factura.id}" /> <input type="hidden"
 						name="declaracionFacturasDepreciadas[${factura?index}].montoDeducibleFactura"
-						value="${(factura.idMontoDeducible?string)!''}" /> <input type="hidden"
+						value="${(factura.idMontoDeducible?string)!''}" /> <input
+						type="hidden"
 						name="declaracionFacturasDepreciadas[${factura?index}].fechaInicioDepreciacionFactura"
 						value="${factura.idFechaInicioDepreciacion}" /> <input
 						type="hidden"
@@ -109,6 +126,11 @@ table, th, td {
 						value="${factura.idPorcentaje}" />
 
 					</td>
+
+					<#assign
+						ivaDepreciacion=montoDepreciacionMensualAcumuladaPorFacturaId[factura.id?string]*0.16>
+					<#assign ivaTotalDepreciacion+=ivaDepreciacion>
+					<td>${ivaDepreciacion}</td>
 				</tr>
 				</#items> <#else></#list>
 			</tbody>
@@ -123,13 +145,16 @@ table, th, td {
 					<td></td>
 					<td></td>
 					<td></td>
+					<td></td>
 					<td style="text-align: right;">${sumaDepreciadas}</td>
+					<td style="text-align: right;">${ivaTotalDepreciacion}</td>
 				</tr>
 			</tfoot>
 		</table>
 		<input type="submit" name="Registrar" />
 	</form>
 	<p>Grand total: ${sumaNoDepreciadas+sumaDepreciadas}</p>
+	<p>Grand IVA total: ${ivaTotal+ivaTotalDepreciacion}</p>
 
 </body>
 </html>
