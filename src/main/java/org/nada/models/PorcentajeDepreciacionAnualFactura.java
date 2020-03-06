@@ -1,5 +1,5 @@
 package org.nada.models;
-// Generated 26 dic 2019 20:41:46 by Hibernate Tools 5.2.5.Final
+// Generated Mar 5, 2020, 7:25:33 PM by Hibernate Tools 5.2.5.Final
 
 
 import java.util.Date;

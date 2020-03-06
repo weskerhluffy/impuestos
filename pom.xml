@@ -19,7 +19,7 @@
 		<java.version>12</java.version>
 		<hibernate.version>5.2.5.Final</hibernate.version>
 		<hibernate-annotations.version>5.0.1.Final</hibernate-annotations.version>
-		<postgresql.version>42.2.6-SNAPSHOT</postgresql.version>
+		<postgresql.version>42.2.10</postgresql.version>
 	</properties>
 
 	<dependencies>
@@ -123,6 +123,8 @@
 			<artifactId>jaxb-runtime</artifactId>
 			<version>2.3.0-b170127.1453</version>
 		</dependency>
+
+
 
 	</dependencies>
 
@@ -250,6 +252,11 @@
 				<configuration>
 					<forkCount>0</forkCount>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>4.0.3</version>
 			</plugin>
 		</plugins>
 	</build>

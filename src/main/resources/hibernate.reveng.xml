@@ -33,6 +33,8 @@
 		match-name=".*_factura" />
 	<table-filter match-schema="public"
 		match-name="declaracion.*" />
+	<table-filter match-schema="public"
+		match-name="monto_deducible_concepto_factura_vigente" />
 
 	<table schema="public" name="factura_vigente">
 		<meta attribute="extra-import">java.util.stream.Collectors</meta>
@@ -207,12 +209,48 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 		</primary-key>
 	</table>
 	<table schema="public" name="concepto_factura">
+		<meta attribute="extra-import">org.apache.commons.lang3.builder.ToStringBuilder</meta>
+		<meta attribute="extra-import">import java.util.Set</meta>
+		<meta attribute="extra-import">import javax.persistence.OneToMany</meta>
+		<meta attribute="class-code">
+        <![CDATA[
+// Aca nomas probando controla la autodegeneracion con <<class-code >>
+// TODO: https://stackoverflow.com/questions/2653268/what-are-the-shortcut-to-auto-generating-tostring-method-in-eclipse
+public String toString() { return ToStringBuilder.reflectionToString(this); }
+
+	private MontoDeducibleConceptoFacturaVigente montoDeducibleConceptoFacturaVigente;
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id", updatable = false, insertable = false)
+	public MontoDeducibleConceptoFacturaVigente getMontoDeducibleConceptoFacturaVigente() {
+		return montoDeducibleConceptoFacturaVigente;
+	}
+
+	public void setMontoDeducibleConceptoFacturaVigente(MontoDeducibleConceptoFacturaVigente montoDeducibleConceptoFacturaVigente) {
+		this.montoDeducibleConceptoFacturaVigente = montoDeducibleConceptoFacturaVigente;
+	}
+	
+
+        ]]>
+		</meta>
 		<primary-key>
 			<generator class="identity"></generator>
 			<key-column name="id" />
 		</primary-key>
 	</table>
 	<table schema="public" name="impuestos_concepto_factura">
+		<primary-key>
+			<generator class="identity"></generator>
+			<key-column name="id" />
+		</primary-key>
+	</table>
+	<table schema="public" name="monto_deducible_concepto_factura">
+		<primary-key>
+			<generator class="identity"></generator>
+			<key-column name="id" />
+		</primary-key>
+	</table>
+
+	<table schema="public" name="monto_deducible_concepto_factura_vigente">
 		<primary-key>
 			<generator class="identity"></generator>
 			<key-column name="id" />

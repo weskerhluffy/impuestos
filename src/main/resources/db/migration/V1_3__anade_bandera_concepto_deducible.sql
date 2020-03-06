@@ -1,0 +1,1 @@
+alter table concepto_factura add es_deducible boolean;

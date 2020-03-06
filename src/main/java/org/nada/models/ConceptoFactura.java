@@ -1,5 +1,5 @@
 package org.nada.models;
-// Generated 26 dic 2019 20:41:46 by Hibernate Tools 5.2.5.Final
+// Generated Mar 5, 2020, 7:25:33 PM by Hibernate Tools 5.2.5.Final
 
 
 import java.util.Date;
@@ -38,6 +38,8 @@ public class ConceptoFactura  implements java.io.Serializable {
      private Double importe;
      private Double descuento;
      private Date tiempoCreacion;
+     private Boolean esDeducible;
+     private Set<MontoDeducibleConceptoFactura> montoDeducibleConceptoFacturas = new HashSet<MontoDeducibleConceptoFactura>(0);
      private Set<ImpuestosConceptoFactura> impuestosConceptoFacturas = new HashSet<ImpuestosConceptoFactura>(0);
 
     public ConceptoFactura() {
@@ -52,7 +54,7 @@ public class ConceptoFactura  implements java.io.Serializable {
         this.importe = importe;
         this.descuento = descuento;
     }
-    public ConceptoFactura(Factura factura, String claveProductoOServicio, Double cantidad, String claveUnidad, String descripcion, Double valorUnitario, Double importe, Double descuento, Date tiempoCreacion, Set<ImpuestosConceptoFactura> impuestosConceptoFacturas) {
+    public ConceptoFactura(Factura factura, String claveProductoOServicio, Double cantidad, String claveUnidad, String descripcion, Double valorUnitario, Double importe, Double descuento, Date tiempoCreacion, Boolean esDeducible, Set<MontoDeducibleConceptoFactura> montoDeducibleConceptoFacturas, Set<ImpuestosConceptoFactura> impuestosConceptoFacturas) {
        this.factura = factura;
        this.claveProductoOServicio = claveProductoOServicio;
        this.cantidad = cantidad;
@@ -62,6 +64,8 @@ public class ConceptoFactura  implements java.io.Serializable {
        this.importe = importe;
        this.descuento = descuento;
        this.tiempoCreacion = tiempoCreacion;
+       this.esDeducible = esDeducible;
+       this.montoDeducibleConceptoFacturas = montoDeducibleConceptoFacturas;
        this.impuestosConceptoFacturas = impuestosConceptoFacturas;
     }
    
@@ -165,6 +169,25 @@ public class ConceptoFactura  implements java.io.Serializable {
     
     public void setTiempoCreacion(Date tiempoCreacion) {
         this.tiempoCreacion = tiempoCreacion;
+    }
+
+    
+    @Column(name="es_deducible")
+    public Boolean getEsDeducible() {
+        return this.esDeducible;
+    }
+    
+    public void setEsDeducible(Boolean esDeducible) {
+        this.esDeducible = esDeducible;
+    }
+
+@OneToMany(fetch=FetchType.LAZY, mappedBy="conceptoFactura")
+    public Set<MontoDeducibleConceptoFactura> getMontoDeducibleConceptoFacturas() {
+        return this.montoDeducibleConceptoFacturas;
+    }
+    
+    public void setMontoDeducibleConceptoFacturas(Set<MontoDeducibleConceptoFactura> montoDeducibleConceptoFacturas) {
+        this.montoDeducibleConceptoFacturas = montoDeducibleConceptoFacturas;
     }
 
 @OneToMany(fetch=FetchType.LAZY, mappedBy="conceptoFactura")

@@ -169,8 +169,6 @@ AS
   WHERE  a.tiempo_creacion = a.ultimo_creado; 
 
 
--- select date('2019-02-01')-INTERVAL '1 month'
-
 -- XXX: http://www.postgresqltutorial.com/postgresql-create-function/
 -- XXX: http://www.sqlines.com/postgresql/how-to/datediff
 SELECT f.* 
@@ -183,6 +181,7 @@ WHERE  ( Mesdif(Date('2019-01-01'), Coalesce(f.fecha_inicio_depreciacion, Date('
            Date('2019-01-01'))) < f.monto 
 ORDER  BY f.periodo 
  
+-- TODO: Anade aqui el id del ultimo monto
 drop table if exists concepto_factura cascade;
 CREATE TABLE concepto_factura (
  id serial PRIMARY KEY,
@@ -209,17 +208,4 @@ CREATE TABLE impuestos_concepto_factura(
  tipo VARCHAR (255)
 );
 
-SELECT f.* FROM   factura_vigente f WHERE  ( Mesdif(:periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) > 0 OR Mismo_periodo(f.fecha_inicio_depreciacion, date('2019-01-01')) ) AND ( ( ( f.monto * ( Coalesce(f.porcentaje, 0) / 100 ) ) / 12 ) + 0.005 ) * Mesdif( :periodo, Coalesce(f.fecha_inicio_depreciacion, :periodo)) < f.monto ORDER  BY f.periodo 
-
-update factura set descripcion='IVA acreditable', folio='83' where id=121;
-
-update declaracion set tiempo_creacion=now()
-select * from declaracion_vigente
-select * from declaracion_factura
-
-select generatedAlias0 from factura as generatedAlias0 where ( generatedAlias0.rfc_emisor='CFC110121742') and ( generatedAlias0.folio='C1DCFFCF-6EF7-49A9-8A65-8D665547A74E')
-select rfc_emisor, folio from factura where rfc_emisor='CFC110121742'
-select * from monto_deducible_factura
-ALTER SEQUENCE monto_deducible_factura_id_seq RESTART WITH 242
-select * from factura order by periodo
-update factura set periodo='2019-05-27' where id=148;
+-- TODO: Manejar depreciacion de conceptos
