@@ -61,6 +61,7 @@ td {
 								<thead>
 									<tr>
 										<th>Descripcion</th>
+										<th>Es deducible</th>
 										<th>Importe</th>
 										<th>Descuento</th>
 										<th>A pagar</th>
@@ -74,6 +75,7 @@ td {
 									<tr>
 
 										<#assign aPagar=concepto.importe-(concepto.descuento!0)>
+										<td><input type="checkbox" name="facturas[${factura?index}].conceptoFacturasMapa[${concepto.id}].esDeducible" value="${concepto.esDeducible?string('Si','No')}"/></td>
 										<td>${concepto.descripcion}</td>
 										<td>${concepto.importe}</td>
 										<td>${concepto.descuento!0}</td>

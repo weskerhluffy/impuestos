@@ -1,15 +1,15 @@
 package org.nada.models;
-// Generated Mar 5, 2020, 7:25:33 PM by Hibernate Tools 5.2.5.Final
+// Generated Mar 7, 2020, 10:58:02 AM by Hibernate Tools 5.2.5.Final
 
 
-import import java.util.Set;
-import import javax.persistence.OneToMany;
 import java.util.Date;
+import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;

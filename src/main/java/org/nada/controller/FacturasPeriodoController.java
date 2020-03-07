@@ -114,7 +114,8 @@ public class FacturasPeriodoController {
 
 	@GetMapping(value = "/calculaGastos")
 	// @formatter:off
-	// XXX: https://stackoverflow.com/questions/15164864/how-to-accept-date-params-in-a-get-request-to-spring-mvc-controller
+	// XXX:
+	// https://stackoverflow.com/questions/15164864/how-to-accept-date-params-in-a-get-request-to-spring-mvc-controller
 	// @formatter:on
 	public ModelAndView calculaGastos(@RequestParam("periodo") @DateTimeFormat(pattern = "yyyy-MM-dd") Date periodo) {
 		LOGGER.debug("TMPH periodo {}", periodo);
@@ -127,15 +128,17 @@ public class FacturasPeriodoController {
 		var montoDepreciacionMensualAcumuladaPorFacturaId = new HashMap<String, Double>();
 		for (FacturaVigenteExtendida facturaVigente : facturasDepreciadas) {
 			// @formatter:off
-			// XXX: https://learn2program.wordpress.com/2008/07/23/how-to-use-int-as-the-key-of-a-map-to-display-in-freemarker/
-            // @formatter:on
+			// XXX:
+			// https://learn2program.wordpress.com/2008/07/23/how-to-use-int-as-the-key-of-a-map-to-display-in-freemarker/
+			// @formatter:on
 			LOGGER.debug("TMPH factura ext {}", facturaVigente);
 			montoDepreciacionMensualAcumuladaPorFacturaId.put(facturaVigente.getId().toString(),
 					calculaMontoDepreciacionAcumuladaMensual(facturaVigente, periodo));
 		}
 		// @formatter:off
-		// XXX: https://stackoverflow.com/questions/41240414/equivalent-of-scalas-foldleft-in-java-8
-        // @formatter:on
+		// XXX:
+		// https://stackoverflow.com/questions/41240414/equivalent-of-scalas-foldleft-in-java-8
+		// @formatter:on
 		Double sumaNoDepreciadas = facturasNoDepreciadas.stream().map(FacturaVigente::getMonto).reduce(0.0,
 				(acc, c) -> acc + c);
 		Double sumaDepreciadas = facturasDepreciadas.stream()
@@ -149,8 +152,9 @@ public class FacturasPeriodoController {
 
 		List<DeclaracionVigente> declaracionVigentes = new ArrayList<>();
 		// @formatter:off
-		// XXX: https://stackoverflow.com/questions/6416706/easy-way-to-convert-iterable-to-collection
-        // @formatter:on
+		// XXX:
+		// https://stackoverflow.com/questions/6416706/easy-way-to-convert-iterable-to-collection
+		// @formatter:on
 		declaracionVigenteDAO.findAll().forEach(declaracionVigentes::add);
 		LOGGER.debug("TMPH declaraciones vigentes {}", declaracionVigentes);
 
@@ -192,11 +196,13 @@ public class FacturasPeriodoController {
 					Class<?> clase = entry.getKey();
 					Map<Integer, String> nombresPropiedadesPorIndice = entry.getValue();
 					// @formatter:off
-					// XXX: https://stackoverflow.com/questions/13692700/good-way-to-get-any-value-from-a-java-set
+					// XXX:
+					// https://stackoverflow.com/questions/13692700/good-way-to-get-any-value-from-a-java-set
 					// @formatter:on
 					Integer indiceCualquiera = nombresPropiedadesPorIndice.keySet().iterator().next();
 					// @formatter:off
-					// XXX: https://stackoverflow.com/questions/14721397/checking-if-a-string-is-empty-or-null-in-java/14721414
+					// XXX:
+					// https://stackoverflow.com/questions/14721397/checking-if-a-string-is-empty-or-null-in-java/14721414
 					// @formatter:on
 					if (!StringUtils.isEmpty(line[indiceCualquiera])) {
 						// XXX:
@@ -285,7 +291,8 @@ public class FacturasPeriodoController {
 	private Double calculaMontoDepreciacionAcumuladaMensual(FacturaVigenteExtendida facturaVigente, Date periodo) {
 		Double monto = facturaVigente.getMontoDepreciacionMensual();
 		// @formatter:off
-		// XXX: https://stackoverflow.com/questions/9474121/i-want-to-get-year-month-day-etc-from-java-date-to-compare-with-gregorian-cal/32363174#32363174
+		// XXX:
+		// https://stackoverflow.com/questions/9474121/i-want-to-get-year-month-day-etc-from-java-date-to-compare-with-gregorian-cal/32363174#32363174
 		// @formatter:on
 
 		LocalDate periodoLocalDate = periodo.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -300,12 +307,14 @@ public class FacturasPeriodoController {
 			inicioDepreciacion = convertToLocalDateViaInstant(facturaVigente.getFechaInicioDepreciacion());
 		}
 		// @formatter:off
-		// XXX: https://stackoverflow.com/questions/23215299/how-to-convert-a-localdate-to-an-instant
+		// XXX:
+		// https://stackoverflow.com/questions/23215299/how-to-convert-a-localdate-to-an-instant
 		// @formatter:on
 //		YearMonth inicioAnoYearMonth = YearMonth.from(Instant.from(inicioAnoLocalDate));
 
 		// @formatter:off
-		// XXX: https://stackoverflow.com/questions/1086396/java-date-month-difference/34811261#34811261
+		// XXX:
+		// https://stackoverflow.com/questions/1086396/java-date-month-difference/34811261#34811261
 		// @formatter:on
 		var mesesTranscurridosDelAno = ChronoUnit.MONTHS.between(inicioDepreciacion, periodoLocalDate) + 1;
 		LOGGER.debug("TMPH Meses entre {} y {} son {}", inicioDepreciacion, periodoLocalDate, mesesTranscurridosDelAno);
@@ -314,7 +323,8 @@ public class FacturasPeriodoController {
 	}
 
 	// @formatter:off
-	// XXX: https://hellokoding.com/uploading-multiple-files-example-with-spring-boot/
+	// XXX:
+	// https://hellokoding.com/uploading-multiple-files-example-with-spring-boot/
 	// @formatter:on
 	@GetMapping("/subeXml")
 	public ModelAndView uploading() {
@@ -394,15 +404,22 @@ public class FacturasPeriodoController {
 						ConceptoFactura conceptoFactura = new ConceptoFactura(factura, concepto.getClaveProdServ(),
 								concepto.getCantidad().doubleValue(), concepto.getClaveUnidad(),
 								concepto.getDescripcion(), concepto.getValorUnitario().doubleValue(),
-								concepto.getImporte().doubleValue(), obtenValor(concepto.getDescuento()), ahora, null);
+								concepto.getImporte().doubleValue(), obtenValor(concepto.getDescuento()), ahora, false,
+								null, null);
 						entityManager.persist(conceptoFactura);
 						for (var impuesto : concepto.getImpuestos().getTraslados().getTraslado()) {
+							LOGGER.debug("Inpuesto {} antes de guardar ", impuesto);
+							Double base = impuesto.getBase() != null ? impuesto.getBase().doubleValue() : 0;
+							Double tasaOCuota = impuesto.getTasaOCuota() != null
+									? impuesto.getTasaOCuota().doubleValue()
+									: 0;
+							Double importe = impuesto.getImporte() != null ? impuesto.getImporte().doubleValue() : 0;
 							ImpuestosConceptoFactura impuestosConceptoFactura = new ImpuestosConceptoFactura(
-									conceptoFactura, impuesto.getBase().doubleValue(), impuesto.getImpuesto(),
-									impuesto.getTipoFactor().value(), impuesto.getTasaOCuota().doubleValue(),
-									impuesto.getImporte().doubleValue(), "trasladado");
+									conceptoFactura, base, impuesto.getImpuesto(), impuesto.getTipoFactor().value(),
+									tasaOCuota, importe, "trasladado");
 							entityManager.persist(impuestosConceptoFactura);
 						}
+						LOGGER.debug("Concepto {} creado", conceptoFactura);
 					}
 
 				} else {
@@ -411,8 +428,9 @@ public class FacturasPeriodoController {
 
 			} catch (RuntimeException e) {
 				// @formatter:off
-					// XXX: https://stackoverflow.com/questions/40301779/how-to-handle-a-psqlexception-in-java
-					// @formatter:on
+				// XXX:
+				// https://stackoverflow.com/questions/40301779/how-to-handle-a-psqlexception-in-java
+				// @formatter:on
 
 				LOGGER.error("Factura {} ya esta dada de alta {}", factura, ExceptionUtils.getStackTrace(e));
 			}
@@ -426,7 +444,8 @@ public class FacturasPeriodoController {
 	public ModelAndView modificaDepreciacion(
 			@RequestParam("periodo") @DateTimeFormat(pattern = "yyyy-MM-dd") Date periodo) {
 		// @formatter:off
-		// XXX: https://stackoverflow.com/questions/9474121/i-want-to-get-year-month-day-etc-from-java-date-to-compare-with-gregorian-cal/32363174#32363174
+		// XXX:
+		// https://stackoverflow.com/questions/9474121/i-want-to-get-year-month-day-etc-from-java-date-to-compare-with-gregorian-cal/32363174#32363174
 		// @formatter:on
 		LocalDate localDate = periodo.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 		Integer year = localDate.getYear();
@@ -541,9 +560,12 @@ public class FacturasPeriodoController {
 	}
 
 	// @formatter:off
-	// XXX: https://stackoverflow.com/questions/12544479/spring-mvc-type-conversion-propertyeditor-or-converter
-	// XXX: https://docs.spring.io/spring/docs/2.5.5/reference/mvc.html#mvc-ann-webdatabinder
-	// XXX: https://stackoverflow.com/questions/67980/how-do-i-register-a-custom-type-converter-in-spring
+	// XXX:
+	// https://stackoverflow.com/questions/12544479/spring-mvc-type-conversion-propertyeditor-or-converter
+	// XXX:
+	// https://docs.spring.io/spring/docs/2.5.5/reference/mvc.html#mvc-ann-webdatabinder
+	// XXX:
+	// https://stackoverflow.com/questions/67980/how-do-i-register-a-custom-type-converter-in-spring
 	// @formatter:on
 	@InitBinder
 	public void initBinder(WebDataBinder binder) {
@@ -628,7 +650,8 @@ class ModeloFacturaEditorImpl<T> extends PropertyEditorSupport implements Modelo
 			Field field;
 			try {
 				// @formatter:off
-				// XXX: https://stackoverflow.com/questions/13400075/reflection-generic-get-field-value
+				// XXX:
+				// https://stackoverflow.com/questions/13400075/reflection-generic-get-field-value
 				// @formatter:on
 				field = modelo.getClass().getDeclaredField("id");
 				field.setAccessible(true);
@@ -649,7 +672,8 @@ class ModeloFacturaEditorImpl<T> extends PropertyEditorSupport implements Modelo
 	public void setAsText(String text) throws IllegalArgumentException {
 		LOGGER.debug("TMPH transformando de {} a {}", text, entityBeanType);
 		// @formatter:off
-		// XXX: https://stackoverflow.com/questions/5439529/determine-if-a-string-is-an-integer-in-java
+		// XXX:
+		// https://stackoverflow.com/questions/5439529/determine-if-a-string-is-an-integer-in-java
 		// @formatter:on
 		if (StringUtils.isEmpty(text) || !StringUtils.isNumeric(text)) {
 			setValue(null);

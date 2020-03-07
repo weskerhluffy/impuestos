@@ -41,7 +41,9 @@
 		<meta attribute="extra-import">java.util.List</meta>
 		<meta attribute="extra-import">javax.persistence.Transient</meta>
 		<meta attribute="extra-import">org.apache.commons.lang3.builder.ToStringBuilder</meta>
-
+		<meta attribute="extra-import">javax.persistence.JoinColumn</meta>
+		<meta attribute="extra-import">javax.persistence.OneToOne</meta>
+		<meta attribute="extra-import">javax.persistence.FetchType</meta>
 
 		<meta attribute="class-code">
         <![CDATA[
@@ -49,6 +51,7 @@
 // TODO: https://stackoverflow.com/questions/2653268/what-are-the-shortcut-to-auto-generating-tostring-method-in-eclipse
 public String toString() { return ToStringBuilder.reflectionToString(this); }
 
+	private Factura factura;
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "id", updatable = false, insertable = false)
 	public Factura getFactura() {
@@ -104,6 +107,48 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 		</primary-key>
 	</table>
 	<table schema="public" name="factura">
+	
+		<meta attribute="extra-import">java.util.stream.Collectors</meta>
+		<meta attribute="extra-import">javax.persistence.Transient</meta>
+		<meta attribute="extra-import">org.apache.commons.lang3.builder.ToStringBuilder</meta>
+		<meta attribute="extra-import">org.hibernate.annotations.Where</meta>
+		<meta attribute="extra-import">java.util.Map</meta>
+		<meta attribute="extra-import">java.util.HashMap</meta>
+		<meta attribute="extra-import">java.util.function.Function</meta>
+		<meta attribute="extra-import">java.util.stream.Collectors</meta>
+
+		<meta attribute="class-code">
+        <![CDATA[
+	public String toString() { return ToStringBuilder.reflectionToString(this); }
+	private Map<Integer, ConceptoFactura> conceptoFacturasMapa = null;
+	private Map<Integer, ConceptoFactura> conceptoFacturasDeducibles = new HashMap<>();
+
+	@Transient
+	public Map<Integer, ConceptoFactura> getConceptoFacturasMapa() {
+		if (conceptoFacturasMapa == null) {
+			// XXX: https://www.techiedelight.com/convert-set-to-map-java/
+			conceptoFacturasMapa = conceptoFacturas.stream()
+					.collect(Collectors.toMap(ConceptoFactura::getId, Function.identity()));
+		}
+		return conceptoFacturasMapa;
+	}
+
+	public void setConceptoFacturasMapa(Map<Integer, ConceptoFactura> conceptoFacturasMapa) {
+		this.conceptoFacturasMapa = conceptoFacturasMapa;
+	}
+
+	@Where(clause = "es_deducible")
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "factura")
+	public Map<Integer, ConceptoFactura> getConceptoFacturasDeducibles() {
+		return conceptoFacturasDeducibles;
+	}
+
+	public void setConceptoFacturasDeducibles(Map<Integer, ConceptoFactura> conceptoFacturasDeducibles) {
+		this.conceptoFacturasDeducibles = conceptoFacturasDeducibles;
+	}
+
+        ]]>
+		</meta>
 		<primary-key>
 			<generator class="identity"></generator>
 			<key-column name="id" />
@@ -168,8 +213,8 @@ private FacturaVigente facturaVigente;
 	<table schema="public" name="declaracion_vigente">
 
 		<meta attribute="extra-import">org.apache.commons.lang3.builder.ToStringBuilder</meta>
-		<meta attribute="extra-import">import java.util.Set</meta>
-		<meta attribute="extra-import">import javax.persistence.OneToMany</meta>
+		<meta attribute="extra-import">java.util.Set</meta>
+		<meta attribute="extra-import">javax.persistence.OneToMany</meta>
 		<meta attribute="class-code">
         <![CDATA[
 // Aca nomas probando controla la autodegeneracion con <<class-code >>
@@ -210,8 +255,8 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 	</table>
 	<table schema="public" name="concepto_factura">
 		<meta attribute="extra-import">org.apache.commons.lang3.builder.ToStringBuilder</meta>
-		<meta attribute="extra-import">import java.util.Set</meta>
-		<meta attribute="extra-import">import javax.persistence.OneToMany</meta>
+		<meta attribute="extra-import">java.util.Set</meta>
+		<meta attribute="extra-import">javax.persistence.OneToOne</meta>
 		<meta attribute="class-code">
         <![CDATA[
 // Aca nomas probando controla la autodegeneracion con <<class-code >>

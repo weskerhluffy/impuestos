@@ -1,5 +1,5 @@
 package org.nada.models;
-// Generated Mar 5, 2020, 7:25:33 PM by Hibernate Tools 5.2.5.Final
+// Generated Mar 7, 2020, 10:58:02 AM by Hibernate Tools 5.2.5.Final
 
 
 import javax.persistence.Column;
