@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<#import "/spring.ftl" as spring/>
 <html>
 <head>
 <title>Modifica montos</title>
@@ -60,8 +61,8 @@ td {
 							<table>
 								<thead>
 									<tr>
+										<th> <input type="checkbox" id="son_deducibles"/> Es deducible</th>
 										<th>Descripcion</th>
-										<th>Es deducible</th>
 										<th>Importe</th>
 										<th>Descuento</th>
 										<th>A pagar</th>
@@ -75,7 +76,11 @@ td {
 									<tr>
 
 										<#assign aPagar=concepto.importe-(concepto.descuento!0)>
-										<td><input type="checkbox" name="facturas[${factura?index}].conceptoFacturasMapa[${concepto.id}].esDeducible" value="${concepto.esDeducible?string('Si','No')}"/></td>
+										<td>
+											<!-- XXX: http://justsomejavaguy.blogspot.com/2009/08/single-form-checkbox-macro-for.html -->
+											<input type="hidden" name="_facturas[${factura?index}].factura.conceptoFacturasMapa[${concepto.id}].esDeducible" value="${concepto.esDeducible?string("true","false")}"/>
+											<input type="checkbox" id="facturas[${factura?index}].factura.conceptoFacturasMapa[${concepto.id}].esDeducible" name="facturas[${factura?index}].factura.conceptoFacturasMapa[${concepto.id}].esDeducible" ${concepto.esDeducible?string('checked="true"','')}/>
+										</td>
 										<td>${concepto.descripcion}</td>
 										<td>${concepto.importe}</td>
 										<td>${concepto.descuento!0}</td>
@@ -140,7 +145,7 @@ td {
 						,##0.0;; decimalSeparator='.' groupingSeparator=' ' "))!''}" /></td>
 					<td><input type="text"
 						name="facturas[${factura?index}].fechaInicioDepreciacion"
-						value="${(factura.fechaInicioDepreciacion?string[" yyyy-MM-dd"])!''}" />
+						value="${(factura.fechaInicioDepreciacion?string["yyyy-MM-dd"])!''}" />
 					</td>
 					<td>${totalImpuestos}</td>
 					<td>

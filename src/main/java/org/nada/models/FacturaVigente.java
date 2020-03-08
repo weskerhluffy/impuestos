@@ -215,6 +215,9 @@ public class FacturaVigente implements java.io.Serializable {
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "id", updatable = false, insertable = false)
 	public Factura getFactura() {
+		if(factura==null) {
+			factura=new Factura();
+		}
 		return factura;
 	}
 

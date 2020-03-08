@@ -4,7 +4,7 @@ logging:
    level:
       .: WARN
       org.nada: DEBUG
-#      org.hibernate: DEBUG
+#      org.hibernate: WARN
 spring:
    profiles:
       active: dev
@@ -12,7 +12,7 @@ spring:
 # XXX: https://www.mkyong.com/spring-boot/spring-boot-how-to-disable-the-spring-logo-banner/
       banner-mode: console
    jpa:
-      show-sql: true
+      show-sql: false
       hibernate:
          naming:
             physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
@@ -36,7 +36,8 @@ security:
 spring:
    profiles: dev
    datasource:
-      url: jdbc:postgresql://localhost:5434/impuestos?loggerLevel=TRACE
+#      url: jdbc:postgresql://localhost:5434/impuestos?loggerLevel=TRACE
+      url: jdbc:postgresql://localhost:5434/impuestos
    jpa:
       properties:
          hibernate:

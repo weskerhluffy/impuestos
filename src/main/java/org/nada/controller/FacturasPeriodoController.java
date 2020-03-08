@@ -465,8 +465,9 @@ public class FacturasPeriodoController {
 		Date tiempoCreacion = new Date();
 		LOGGER.debug("TMPH AAAA {}", periodo);
 		for (FacturaVigente facturaVigente : facturaContainer.getFacturas()) {
-			Factura factura = facturaDAO.findById(facturaVigente.getId()).get();
 			LOGGER.debug("TMPH procesando fact {}", facturaVigente);
+			Factura factura = facturaDAO.findById(facturaVigente.getId()).get();
+			LOGGER.debug("TMPH procesando conceptos {}", facturaVigente.getFactura().getConceptoFacturas());
 			if ((facturaVigente.getPorcentaje() != null) != (facturaVigente.getFechaInicioDepreciacion() != null)) {
 				throw new RuntimeException(String.format("factura %s tiene datos erroneos", facturaVigente));
 			}
@@ -488,6 +489,15 @@ public class FacturasPeriodoController {
 				LOGGER.debug("TMPH guardando datos monto {}:{}", montoDeducibleFactura, montoDeducibleFactura.getId());
 				entityManager.persist(montoDeducibleFactura);
 				LOGGER.debug("TMPH guardados datos monto {}:{}", montoDeducibleFactura, montoDeducibleFactura.getId());
+			}
+			for (var entry : facturaVigente.getFactura().getConceptoFacturasMapa().entrySet()) {
+				var idConceptoFactura = entry.getKey();
+				var conceptoFactura = entry.getValue();
+				var conceptoFacturaGuardado = entityManager.find(ConceptoFactura.class, idConceptoFactura);
+				if (conceptoFactura.getEsDeducible() != conceptoFacturaGuardado.getEsDeducible()) {
+					conceptoFacturaGuardado.setEsDeducible(conceptoFactura.getEsDeducible());
+					entityManager.persist(conceptoFacturaGuardado);
+				}
 			}
 		}
 		return "redirect:/modificaDepreciacion?periodo=" + FORMATEADOR_FECHA.format(periodo);
