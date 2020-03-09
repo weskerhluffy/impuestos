@@ -177,10 +177,16 @@ public class FacturasPeriodoController {
 		LOGGER.debug("TMPH se subio {}", file.getOriginalFilename());
 		// XXX:
 		// https://stackoverflow.com/questions/2625546/is-using-the-class-instance-as-a-map-key-a-best-practice
+		// TODO: Mapear varias propiedades a un solo indice
 		Map<Class<?>, Map<Integer, String>> nombresPropiedades = Map.of(Factura.class,
 				Map.of(0, "periodo", 1, "folio", 2, "descripcion", 3, "rfcEmisor", 4, "razonSocialEmisor"),
 				MontoFactura.class, Map.of(5, "monto"), FechaInicioDepreciacionFactura.class, Map.of(9, "fecha"),
-				PorcentajeDepreciacionAnualFactura.class, Map.of(8, "porcentaje"));
+				PorcentajeDepreciacionAnualFactura.class, Map.of(8, "porcentaje"), ConceptoFactura.class,
+				Map.of(2, "descripcion", 5, "importe"));
+
+		Map<Class<?>, Map<String, ?>> valoresFijos = Map.of(ConceptoFactura.class,
+				Map.of("claveProductoOServicio", "Clave manual csv", "cantidad", 1.0, "valorUnitario", 1.0, "descuento",
+						0.0, "esDeducible", false, "claveUnidad", "manual_csv"));
 		// XXX:
 		// https://stackoverflow.com/questions/24339990/how-to-convert-a-multipart-file-to-file
 		var convFile = new File(System.getProperty("java.io.tmpdir") + "/" + file.getOriginalFilename());
@@ -274,10 +280,24 @@ public class FacturasPeriodoController {
 							continue;
 						}
 					}
+
+					for (Map.Entry<String, ?> llaveYValor : valoresFijos.getOrDefault(clase, Map.of()).entrySet()) {
+						var nombrePropiedad = llaveYValor.getKey();
+						var valor = llaveYValor.getValue();
+						try {
+							Field propiedad = clase.getDeclaredField(nombrePropiedad);
+							propiedad.setAccessible(true);
+							propiedad.set(instancia, valor);
+							propiedad.setAccessible(false);
+						} catch (NoSuchFieldException e) {
+							continue;
+						}
+					}
+
 					entityManager.persist(instancia);
 					LOGGER.debug("TMPH objecto {} setadas prop", instancia);
-
 				}
+
 			}
 		} catch (IllegalStateException | IOException e1) {
 			LOGGER.error("No se pudo leer archivo {}, la razon {}", file.getOriginalFilename(),
@@ -482,14 +502,19 @@ public class FacturasPeriodoController {
 				entityManager.persist(fechaInicioDepreciacionFactura);
 				entityManager.flush();
 			}
-			FacturaVigente facturaVigente2 = facturaVigenteDAO.findById(facturaVigente.getId()).get();
-			if (facturaVigente.getMonto() != facturaVigente2.getMonto()) {
-				MontoDeducibleFactura montoDeducibleFactura = new MontoDeducibleFactura(factura,
-						facturaVigente.getMonto(), tiempoCreacion, null);
-				LOGGER.debug("TMPH guardando datos monto {}:{}", montoDeducibleFactura, montoDeducibleFactura.getId());
-				entityManager.persist(montoDeducibleFactura);
-				LOGGER.debug("TMPH guardados datos monto {}:{}", montoDeducibleFactura, montoDeducibleFactura.getId());
-			}
+			// TODO: Monto deducible de conceptos
+			/*
+			 * FacturaVigente facturaVigente2 =
+			 * facturaVigenteDAO.findById(facturaVigente.getId()).get(); if
+			 * (facturaVigente.getMonto() != facturaVigente2.getMonto()) {
+			 * MontoDeducibleFactura montoDeducibleFactura = new
+			 * MontoDeducibleFactura(factura, facturaVigente.getMonto(), tiempoCreacion,
+			 * null); LOGGER.debug("TMPH guardando datos monto {} {}",
+			 * facturaVigente.getMonto(), facturaVigente2.getMonto());
+			 * entityManager.persist(montoDeducibleFactura);
+			 * LOGGER.debug("TMPH guardados datos monto {}:{}", montoDeducibleFactura,
+			 * montoDeducibleFactura.getId()); }
+			 */
 			for (var entry : facturaVigente.getFactura().getConceptoFacturasMapa().entrySet()) {
 				var idConceptoFactura = entry.getKey();
 				var conceptoFactura = entry.getValue();

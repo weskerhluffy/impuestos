@@ -18,7 +18,7 @@ td {
 }
 
 .numerico {
-	text-align: right;
+	text-align: right;o
 }
 </style>
 </head>
@@ -95,9 +95,8 @@ td {
 													</tr>
 												</thead>
 												<tbody>
-													<#assign totalImporte=0> <#list
-														concepto.impuestosConceptoFacturas> <#items as
-														impuesto>
+													<#assign totalImporte=0> 
+													<#list concepto.impuestosConceptoFacturas> <#items as impuesto>
 													<tr>
 														<td>${impuesto.base}</td>
 														<td>${impuesto.tasaCuota}</td>
@@ -123,6 +122,7 @@ td {
 										<td>Total:</td>
 										<td></td>
 										<td></td>
+										<td></td>
 										<td>${totalConceptos}</td>
 										<td></td>
 									</tr>
@@ -135,25 +135,42 @@ td {
 					</td>
 					<td>${factura.folio}</td>
 					<!-- XXX: https://stackoverflow.com/questions/30130140/freemarker-is-there-a-way-to-format-an-integer-as-a-floating-point-number -->
-					<td class="numerico"><input class="numerico" type="text"
-						name="facturas[${factura?index}].monto" size="20"
-						value="${factura.monto?string(" ,##0.0;; decimalSeparator='.'
-						groupingSeparator=' ' ")}" /></td>
+					<td class="numerico">
+					
+						<#assign montoDeducible=0>
+						<#assign totalImpuestosMontoDeducible=0>
+						<#list factura.factura.conceptoFacturasDeducibles > 
+								<!-- XXX: https://stackoverflow.com/questions/1497777/freemarker-iterating-over-hashmap-keys -->
+								<#items as _,conceptoDeducible>
+									<#assign montoDeducible+=conceptoDeducible.importe-(conceptoDeducible.descuento!0)>
+									<#assign impuestosMontoDeducible=0>
+									<#list conceptoDeducible.impuestosConceptoFacturas>
+											<#items as impuesto>
+												<#assign impuestosMontoDeducible+=impuesto.importe>
+											</#items> 
+										<#else>
+									</#list>
+									<#assign totalImpuestosMontoDeducible+=impuestosMontoDeducible>
+								</#items>
+							<#else>
+						</#list>
+						${montoDeducible}
+					
+					</td>
 					<td class="numerico"><input class="numerico" type="text"
 						name="facturas[${factura?index}].porcentaje" size="20"
 						value="${(factura.porcentaje?string("
-						,##0.0;; decimalSeparator='.' groupingSeparator=' ' "))!''}" /></td>
+						,##0.0;; decimalSeparator='.' grouconceptoFacturasDeduciblespingSeparator=' ' "))!''}" /></td>
 					<td><input type="text"
 						name="facturas[${factura?index}].fechaInicioDepreciacion"
 						value="${(factura.fechaInicioDepreciacion?string["yyyy-MM-dd"])!''}" />
 					</td>
-					<td>${totalImpuestos}</td>
 					<td>
-<#if factura.factura.conceptoFacturas?size gt 0 >
-					${factura.monto*0.16}
-<#else>
-0
-</#if>
+					${totalImpuestos}
+					</td>
+					<td>
+					
+					${totalImpuestosMontoDeducible}
 					</td>
 					<td>${factura.periodo?string["yyyy-MM-dd"]}</td>
 				</tr>
