@@ -41,6 +41,7 @@ import org.nada.dao.FacturaVigenteDAO;
 import org.nada.dao.MontoFacturaDAO;
 import org.nada.models.ConceptoFactura;
 import org.nada.models.Declaracion;
+import org.nada.models.DeclaracionConceptoFactura;
 import org.nada.models.DeclaracionFactura;
 import org.nada.models.DeclaracionVigente;
 import org.nada.models.Factura;
@@ -156,7 +157,7 @@ public class FacturasPeriodoController {
 		// https://stackoverflow.com/questions/6416706/easy-way-to-convert-iterable-to-collection
 		// @formatter:on
 		declaracionVigenteDAO.findAll().forEach(declaracionVigentes::add);
-		LOGGER.debug("TMPH declaraciones vigentes {}", declaracionVigentes);
+//		LOGGER.debug("TMPH declaraciones vigentes {}", declaracionVigentes);
 
 		return new ModelAndView("tabla_gastos", params);
 	}
@@ -425,7 +426,7 @@ public class FacturasPeriodoController {
 								concepto.getCantidad().doubleValue(), concepto.getClaveUnidad(),
 								concepto.getDescripcion(), concepto.getValorUnitario().doubleValue(),
 								concepto.getImporte().doubleValue(), obtenValor(concepto.getDescuento()), ahora, false,
-								null, null);
+								null, null, null);
 						entityManager.persist(conceptoFactura);
 						for (var impuesto : concepto.getImpuestos().getTraslados().getTraslado()) {
 							LOGGER.debug("Inpuesto {} antes de guardar ", impuesto);
@@ -474,7 +475,7 @@ public class FacturasPeriodoController {
 		var params = new HashMap<String, Object>();
 		params.put("facturas", facturas);
 		params.put("periodo", periodo);
-		LOGGER.debug("TMPH ano {} mes {} facs {}", year, month, facturas);
+//		LOGGER.debug("TMPH ano {} mes {} facs {}", year, month, facturas);
 		return new ModelAndView("modifica_montos", params);
 	}
 
@@ -555,6 +556,12 @@ public class FacturasPeriodoController {
 			declaracionFactura.setTiempoCreacion(ahora);
 			// TODO: Validar que si hay porcentaje hay fecha inicio depreciacion
 			entityManager.persist(declaracionFactura);
+
+			for (ConceptoFactura conceptoFactura : declaracionFactura.getFactura().getConceptoFacturasMapa().values()) {
+				DeclaracionConceptoFactura declaracionConceptoFactura = new DeclaracionConceptoFactura(conceptoFactura,
+						declaracionFactura, ahora);
+				entityManager.persist(declaracionConceptoFactura);
+			}
 			LOGGER.debug("TMPH declaracion fact {}", declaracionFactura);
 		}
 		return "redirect:/visualizaDeclaracion?periodo=" + FORMATEADOR_FECHA.format(periodo);

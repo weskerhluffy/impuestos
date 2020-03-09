@@ -116,6 +116,7 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 		<meta attribute="extra-import">java.util.HashMap</meta>
 		<meta attribute="extra-import">java.util.function.Function</meta>
 		<meta attribute="extra-import">java.util.stream.Collectors</meta>
+		<meta attribute="extra-import">javax.persistence.MapKey</meta>
 
 		<meta attribute="class-code">
         <![CDATA[
@@ -139,6 +140,7 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 
 	@Where(clause = "es_deducible")
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "factura")
+	@MapKey(name = "id")
 	public Map<Integer, ConceptoFactura> getConceptoFacturasDeducibles() {
 		return conceptoFacturasDeducibles;
 	}
@@ -296,6 +298,12 @@ public String toString() { return ToStringBuilder.reflectionToString(this); }
 	</table>
 
 	<table schema="public" name="monto_deducible_concepto_factura_vigente">
+		<primary-key>
+			<generator class="identity"></generator>
+			<key-column name="id" />
+		</primary-key>
+	</table>
+	<table schema="public" name="declaracion_concepto_factura">
 		<primary-key>
 			<generator class="identity"></generator>
 			<key-column name="id" />

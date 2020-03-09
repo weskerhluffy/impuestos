@@ -1,5 +1,5 @@
 package org.nada.models;
-// Generated Mar 7, 2020, 10:58:02 AM by Hibernate Tools 5.2.5.Final
+// Generated Mar 9, 2020, 4:37:16 PM by Hibernate Tools 5.2.5.Final
 
 
 import javax.persistence.Column;
@@ -42,8 +42,7 @@ public class ImpuestosConceptoFactura  implements java.io.Serializable {
         this.tasaCuota = tasaCuota;
         this.importe = importe;
     }
-
-	public ImpuestosConceptoFactura(ConceptoFactura conceptoFactura, Double base, String impuesto, String tipoFactor, Double tasaCuota, Double importe, String tipo) {
+    public ImpuestosConceptoFactura(ConceptoFactura conceptoFactura, Double base, String impuesto, String tipoFactor, Double tasaCuota, Double importe, String tipo) {
        this.conceptoFactura = conceptoFactura;
        this.base = base;
        this.impuesto = impuesto;

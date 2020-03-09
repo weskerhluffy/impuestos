@@ -48,7 +48,6 @@ public class FacturaVigenteDAOCustomImpl implements FacturaVigenteDAOCustom {
 		q.setParameter("mes", calendar.get(Calendar.MONTH) + 1);
 
 		facturas = q.getResultList();
-		LOGGER.debug("TMPH creada lista {}", facturas);
 		for (FacturaVigente facturaVigente2 : facturas) {
 			if (facturaVigente2.getFechaInicioDepreciacion() != null || facturaVigente2.getPorcentaje() != null) {
 				throw new RuntimeException("Factura " + facturaVigente2.getId() + " no es consistente");

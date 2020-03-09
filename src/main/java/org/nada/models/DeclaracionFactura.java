@@ -1,8 +1,10 @@
 package org.nada.models;
-// Generated Mar 7, 2020, 10:58:02 AM by Hibernate Tools 5.2.5.Final
+// Generated Mar 9, 2020, 4:37:16 PM by Hibernate Tools 5.2.5.Final
 
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -11,6 +13,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -36,6 +39,7 @@ public class DeclaracionFactura  implements java.io.Serializable {
      private PorcentajeDepreciacionAnualFactura porcentajeDepreciacionAnualFactura;
      private Integer idDeclaracion;
      private Date tiempoCreacion;
+     private Set<DeclaracionConceptoFactura> declaracionConceptoFacturas = new HashSet<DeclaracionConceptoFactura>(0);
 
     public DeclaracionFactura() {
     }
@@ -46,7 +50,7 @@ public class DeclaracionFactura  implements java.io.Serializable {
         this.montoFactura = montoFactura;
         this.idDeclaracion = idDeclaracion;
     }
-    public DeclaracionFactura(Factura factura, FechaInicioDepreciacionFactura fechaInicioDepreciacionFactura, MontoDeducibleFactura montoDeducibleFactura, MontoFactura montoFactura, PorcentajeDepreciacionAnualFactura porcentajeDepreciacionAnualFactura, Integer idDeclaracion, Date tiempoCreacion) {
+    public DeclaracionFactura(Factura factura, FechaInicioDepreciacionFactura fechaInicioDepreciacionFactura, MontoDeducibleFactura montoDeducibleFactura, MontoFactura montoFactura, PorcentajeDepreciacionAnualFactura porcentajeDepreciacionAnualFactura, Integer idDeclaracion, Date tiempoCreacion, Set<DeclaracionConceptoFactura> declaracionConceptoFacturas) {
        this.factura = factura;
        this.fechaInicioDepreciacionFactura = fechaInicioDepreciacionFactura;
        this.montoDeducibleFactura = montoDeducibleFactura;
@@ -54,6 +58,7 @@ public class DeclaracionFactura  implements java.io.Serializable {
        this.porcentajeDepreciacionAnualFactura = porcentajeDepreciacionAnualFactura;
        this.idDeclaracion = idDeclaracion;
        this.tiempoCreacion = tiempoCreacion;
+       this.declaracionConceptoFacturas = declaracionConceptoFacturas;
     }
    
      @Id @GeneratedValue(strategy=IDENTITY)
@@ -136,6 +141,15 @@ public class DeclaracionFactura  implements java.io.Serializable {
     
     public void setTiempoCreacion(Date tiempoCreacion) {
         this.tiempoCreacion = tiempoCreacion;
+    }
+
+@OneToMany(fetch=FetchType.LAZY, mappedBy="declaracionFactura")
+    public Set<DeclaracionConceptoFactura> getDeclaracionConceptoFacturas() {
+        return this.declaracionConceptoFacturas;
+    }
+    
+    public void setDeclaracionConceptoFacturas(Set<DeclaracionConceptoFactura> declaracionConceptoFacturas) {
+        this.declaracionConceptoFacturas = declaracionConceptoFacturas;
     }
 
 
