@@ -582,14 +582,9 @@ public class FacturasPeriodoController {
 					calculaMontoDepreciacionAcumuladaMensual(facturaVigente, periodo));
 		}
 		params.put("montoDepreciacionMensualAcumuladaPorFacturaId", montoDepreciacionMensualAcumuladaPorFacturaId);
-		Double sumaDepreciadas = declaracionFacturasDepreciadas.stream()
-				.map(f -> calculaMontoDepreciacionAcumuladaMensual(new FacturaVigenteExtendida(f.getFacturaVigente()),
-						periodo))
-				.reduce(0.0, (acc, c) -> acc + c);
 		Double sumaNoDepreciadas = facturasNoDepreciadas.stream().map(FacturaVigente::getMonto).reduce(0.0,
 				(acc, c) -> acc + c);
 		params.put("sumaNoDepreciadas", sumaNoDepreciadas);
-		params.put("sumaDepreciadas", sumaDepreciadas);
 
 		return new ModelAndView("visualizaDeclaracion", params);
 	}

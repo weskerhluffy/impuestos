@@ -29,8 +29,29 @@ table, th, td {
 			</thead>
 			<tbody>
 				<#assign ivaTotal=0> 
+				<#assign sumaFacturasNoDepreciadas=0> 
 				<#list facturasNoDepreciadas>
 				<#items as factura>
+				
+				<#assign montoDeducibleFactura=0> 
+				<#assign ivaFactura=0> 
+				
+				<#list factura.factura.conceptoFacturasDeducibles>
+				<#items as _,conceptoDeducible>
+					<#assign montoDeducibleEfectivo=conceptoDeducible.importe-(conceptoDeducible.descuento!0)> 
+					<#assign montoDeducibleFactura+=montoDeducibleEfectivo> 
+					
+					<#assign impuestosMontoDeducible=0>
+					<#list conceptoDeducible.impuestosConceptoFacturas>
+							<#items as impuesto>
+								<#assign impuestosMontoDeducible+=impuesto.importe>
+							</#items> 
+					<#else>
+					</#list>
+					<#assign ivaFactura+=impuestosMontoDeducible>
+					
+				</#items> <#else></#list>
+				<#assign sumaFacturasNoDepreciadas+=montoDeducibleFactura> 
 				<tr>
 					<td>${factura.id}</td>
 					<td>${factura.rfcEmisor}</td>
@@ -40,25 +61,13 @@ table, th, td {
 					<!-- TODO: Añadir monto original -->
 					<!-- XXX: https://stackoverflow.com/questions/20960069/how-to-customize-number-format-in-freemarker -->
 					<td style="text-align: right;">
-						${factura.monto?string(",##0.00")} <input type="hidden"
-						name="declaracionFacturasNoDepreciadas[${factura?index}].montoFactura"
-						value="${factura.idMonto}" /> <input type="hidden"
-						name="declaracionFacturasNoDepreciadas[${factura?index}].factura"
-						value="${factura.id}" /> <input type="hidden"
-						name="declaracionFacturasNoDepreciadas[${factura?index}].montoDeducibleFactura"
-						value="${factura.idMontoDeducible}" />
+						${montoDeducibleFactura?string(",##0.00")}   
 						
 					<td>
 					
-				<#assign ivaActual=0> 
-<#if factura.factura.conceptoFacturas?has_content >
-				<#assign ivaActual=factura.monto*0.16> 
-							
-<#else>
-</#if>
-					${ivaActual} <#assign
-							ivaTotal+=ivaActual>
-							</td>
+					${ivaFactura} 
+					<#assign ivaTotal+=ivaFactura>
+					</td>
 
 				</tr>
 				</#items> <#else></#list>
@@ -70,7 +79,7 @@ table, th, td {
 					<td></td>
 					<td></td>
 					<td></td>
-					<td style="text-align: right;">${sumaNoDepreciadas}</td>
+					<td style="text-align: right;">${sumaFacturasNoDepreciadas}</td>
 					<td style="text-align: right;">${ivaTotal}</td>
 				</tr>
 			</tfoot>
@@ -153,7 +162,7 @@ table, th, td {
 		</table>
 		<input type="submit" name="Registrar" />
 	</form>
-	<p>Grand total: ${sumaNoDepreciadas+sumaDepreciadas}</p>
+	<p>Grand total: ${sumaFacturasNoDepreciadas+sumaDepreciadas}</p>
 	<p>Grand IVA total: ${ivaTotal+ivaTotalDepreciacion}</p>
 
 </body>

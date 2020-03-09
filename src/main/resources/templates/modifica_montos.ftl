@@ -21,6 +21,7 @@ td {
 	text-align: right;o
 }
 </style>
+<script type="text/javascript" src="modifica_depreciacion.js"></script>
 </head>
 <body>
 	<!-- XXX: https://freemarker.apache.org/docs/ref_builtins_date.html -->
@@ -58,10 +59,10 @@ td {
 <#if factura.factura.conceptoFacturas?size gt 0 >
 						<div>
 							<p>Conceptos:</p>
-							<table>
+							<table id="tabla_${factura.id}">
 								<thead>
 									<tr>
-										<th> <input type="checkbox" id="son_deducibles"/> Es deducible</th>
+										<th> <input type="checkbox" id="son_deducibles_${factura.id}" class="deducibilidad_factura_global"/> Es deducible</th>
 										<th>Descripcion</th>
 										<th>Importe</th>
 										<th>Descuento</th>
@@ -79,7 +80,7 @@ td {
 										<td>
 											<!-- XXX: http://justsomejavaguy.blogspot.com/2009/08/single-form-checkbox-macro-for.html -->
 											<input type="hidden" name="_facturas[${factura?index}].factura.conceptoFacturasMapa[${concepto.id}].esDeducible" value="${concepto.esDeducible?string("true","false")}"/>
-											<input type="checkbox" id="facturas[${factura?index}].factura.conceptoFacturasMapa[${concepto.id}].esDeducible" name="facturas[${factura?index}].factura.conceptoFacturasMapa[${concepto.id}].esDeducible" ${concepto.esDeducible?string('checked="true"','')}/>
+											<input type="checkbox" id="facturas[${factura?index}].factura.conceptoFacturasMapa[${concepto.id}].esDeducible" name="facturas[${factura?index}].factura.conceptoFacturasMapa[${concepto.id}].esDeducible" ${concepto.esDeducible?string('checked="true"','')} class="deducibilidad" />
 										</td>
 										<td>${concepto.descripcion}</td>
 										<td>${concepto.importe}</td>
