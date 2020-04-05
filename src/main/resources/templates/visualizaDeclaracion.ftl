@@ -42,6 +42,7 @@ table, th, td {
 			</tr>
 		</thead>
 		<tbody>
+			<#assign sumaFacturasNoDepreciadas=0> 
 			<#list filtraDeclaracionFacturaNoDepreciadas(declaracionVigente.declaracionFacturas)> <#items as factura>
 			<tr>
 				<td>${factura.facturaVigente.id}</td>
@@ -50,7 +51,29 @@ table, th, td {
 				<td>${factura.facturaVigente.descripcion}</td>
 				<td>${factura.facturaVigente.folio}</td>
 				<td style="text-align: right;">
-					${factura.facturaVigente.monto?string(",##0.00")}</td>
+									
+				<#assign montoDeducibleFactura=0> 
+				<#assign ivaFactura=0> 
+				
+				<#list factura.facturaVigente.factura.conceptoFacturasDeducibles>
+				<#items as _,conceptoDeducible>
+					<#assign montoDeducibleEfectivo=conceptoDeducible.importe-(conceptoDeducible.descuento!0)> 
+					<#assign montoDeducibleFactura+=montoDeducibleEfectivo> 
+					
+					<#assign impuestosMontoDeducible=0>
+					<#list conceptoDeducible.impuestosConceptoFacturas>
+							<#items as impuesto>
+								<#assign impuestosMontoDeducible+=impuesto.importe>
+							</#items> 
+					<#else>
+					</#list>
+					<#assign ivaFactura+=impuestosMontoDeducible>
+					
+				</#items> <#else></#list>
+					${montoDeducibleFactura}
+					
+				<#assign sumaFacturasNoDepreciadas+=montoDeducibleFactura> 
+					</td>
 			</tr>
 			</#items> <#else></#list>
 		</tbody>
@@ -61,7 +84,7 @@ table, th, td {
 				<td></td>
 				<td></td>
 				<td></td>
-				<td style="text-align: right;">${sumaNoDepreciadas}</td>
+				<td style="text-align: right;">${sumaFacturasNoDepreciadas}</td>
 			</tr>
 		</tfoot>
 	</table>

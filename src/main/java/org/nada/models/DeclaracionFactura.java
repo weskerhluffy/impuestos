@@ -1,5 +1,5 @@
 package org.nada.models;
-// Generated Mar 9, 2020, 4:37:16 PM by Hibernate Tools 5.2.5.Final
+// Generated Mar 9, 2020, 6:42:38 PM by Hibernate Tools 5.2.5.Final
 
 
 import java.util.Date;
@@ -45,9 +45,8 @@ public class DeclaracionFactura  implements java.io.Serializable {
     }
 
 	
-    public DeclaracionFactura(Factura factura, MontoFactura montoFactura, Integer idDeclaracion) {
+    public DeclaracionFactura(Factura factura, Integer idDeclaracion) {
         this.factura = factura;
-        this.montoFactura = montoFactura;
         this.idDeclaracion = idDeclaracion;
     }
     public DeclaracionFactura(Factura factura, FechaInicioDepreciacionFactura fechaInicioDepreciacionFactura, MontoDeducibleFactura montoDeducibleFactura, MontoFactura montoFactura, PorcentajeDepreciacionAnualFactura porcentajeDepreciacionAnualFactura, Integer idDeclaracion, Date tiempoCreacion, Set<DeclaracionConceptoFactura> declaracionConceptoFacturas) {
@@ -104,7 +103,7 @@ public class DeclaracionFactura  implements java.io.Serializable {
     }
 
 @ManyToOne(fetch=FetchType.LAZY)
-    @JoinColumn(name="id_monto", nullable=false)
+    @JoinColumn(name="id_monto")
     public MontoFactura getMontoFactura() {
         return this.montoFactura;
     }

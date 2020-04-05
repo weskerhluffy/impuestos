@@ -140,15 +140,12 @@ public class FacturasPeriodoController {
 		// XXX:
 		// https://stackoverflow.com/questions/41240414/equivalent-of-scalas-foldleft-in-java-8
 		// @formatter:on
-		Double sumaNoDepreciadas = facturasNoDepreciadas.stream().map(FacturaVigente::getMonto).reduce(0.0,
-				(acc, c) -> acc + c);
 		Double sumaDepreciadas = facturasDepreciadas.stream()
 				.map(f -> calculaMontoDepreciacionAcumuladaMensual(new FacturaVigenteExtendida(f), periodo))
 				.reduce(0.0, (acc, c) -> acc + c);
 		params.put("montoDepreciacionMensualAcumuladaPorFacturaId", montoDepreciacionMensualAcumuladaPorFacturaId);
 		params.put("facturasNoDepreciadas", facturasNoDepreciadas);
 		params.put("facturasDepreciadas", facturasDepreciadas);
-		params.put("sumaNoDepreciadas", sumaNoDepreciadas);
 		params.put("sumaDepreciadas", sumaDepreciadas);
 
 		List<DeclaracionVigente> declaracionVigentes = new ArrayList<>();
@@ -327,6 +324,7 @@ public class FacturasPeriodoController {
 				.compareTo(inicioAnoLocalDate) > 0) {
 			inicioDepreciacion = convertToLocalDateViaInstant(facturaVigente.getFechaInicioDepreciacion());
 		}
+
 		// @formatter:off
 		// XXX:
 		// https://stackoverflow.com/questions/23215299/how-to-convert-a-localdate-to-an-instant
@@ -533,10 +531,9 @@ public class FacturasPeriodoController {
 	@PostMapping(value = "/registraDeclaracion")
 	public String registraDeclaracion(DeclaracionFacturasContainer declaracionFacturasContainer) {
 		Date ahora = new Date();
-		LOGGER.debug("TMPH declaraciones facts {}", declaracionFacturasContainer);
 		// TODO: Validar que sean del periodo o depreciadas vigentes
-		Date periodoFactura = declaracionFacturasContainer.getDeclaracionFacturasNoDepreciadas().get(0)
-				.getMontoFactura().getFactura().getPeriodo();
+		Date periodoFactura = declaracionFacturasContainer.getDeclaracionFacturasNoDepreciadas().get(0).getFactura()
+				.getPeriodo();
 
 		LocalDate localDate = periodoFactura.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 		Integer ano = localDate.getYear();
@@ -589,9 +586,11 @@ public class FacturasPeriodoController {
 					calculaMontoDepreciacionAcumuladaMensual(facturaVigente, periodo));
 		}
 		params.put("montoDepreciacionMensualAcumuladaPorFacturaId", montoDepreciacionMensualAcumuladaPorFacturaId);
-		Double sumaNoDepreciadas = facturasNoDepreciadas.stream().map(FacturaVigente::getMonto).reduce(0.0,
-				(acc, c) -> acc + c);
-		params.put("sumaNoDepreciadas", sumaNoDepreciadas);
+		Double sumaDepreciadas = declaracionFacturasDepreciadas.stream()
+				.map(f -> calculaMontoDepreciacionAcumuladaMensual(new FacturaVigenteExtendida(f.getFacturaVigente()),
+						periodo))
+				.reduce(0.0, (acc, c) -> acc + c);
+		params.put("sumaDepreciadas", sumaDepreciadas);
 
 		return new ModelAndView("visualizaDeclaracion", params);
 	}

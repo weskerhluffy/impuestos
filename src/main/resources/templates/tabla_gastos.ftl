@@ -62,6 +62,9 @@ table, th, td {
 					<!-- XXX: https://stackoverflow.com/questions/20960069/how-to-customize-number-format-in-freemarker -->
 					<td style="text-align: right;">
 						${montoDeducibleFactura?string(",##0.00")}   
+					
+					<input type="hidden" name="declaracionFacturasNoDepreciadas[${factura?index}].factura" value="${factura.id}" />
+					
 						
 					<td>
 					
@@ -120,19 +123,11 @@ table, th, td {
 					<td style="text-align: right;">
 
 						${montoDepreciacionMensualAcumuladaPorFacturaId[factura.id?string]?string(",##0.00")}
-						<input type="hidden"
-						name="declaracionFacturasDepreciadas[${factura?index}].montoFactura"
-						value="${factura.idMonto}" /> <input type="hidden"
-						name="declaracionFacturasDepreciadas[${factura?index}].factura"
-						value="${factura.id}" /> <input type="hidden"
-						name="declaracionFacturasDepreciadas[${factura?index}].montoDeducibleFactura"
-						value="${(factura.idMontoDeducible?string)!''}" /> <input
-						type="hidden"
-						name="declaracionFacturasDepreciadas[${factura?index}].fechaInicioDepreciacionFactura"
-						value="${factura.idFechaInicioDepreciacion}" /> <input
-						type="hidden"
-						name="declaracionFacturasDepreciadas[${factura?index}].porcentajeDepreciacionAnualFactura"
-						value="${factura.idPorcentaje}" />
+						<input type="hidden" name="declaracionFacturasDepreciadas[${factura?index}].montoFactura" value="${factura.idMonto}" />
+						<input type="hidden" name="declaracionFacturasDepreciadas[${factura?index}].factura" value="${factura.id}" />
+						<input type="hidden" name="declaracionFacturasDepreciadas[${factura?index}].montoDeducibleFactura" value="${(factura.idMontoDeducible?string)!''}" />
+						<input type="hidden" name="declaracionFacturasDepreciadas[${factura?index}].fechaInicioDepreciacionFactura" value="${factura.idFechaInicioDepreciacion}" />
+						<input type="hidden" name="declaracionFacturasDepreciadas[${factura?index}].porcentajeDepreciacionAnualFactura" value="${factura.idPorcentaje}" />
 
 					</td>
 
