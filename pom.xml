@@ -17,7 +17,7 @@
 
 	<properties>
 		<java.version>12</java.version>
-		<hibernate.version>5.2.5.Final</hibernate.version>
+		<hibernate.version>5.3.20.Final</hibernate.version>
 		<hibernate-annotations.version>5.0.1.Final</hibernate-annotations.version>
 		<postgresql.version>42.2.10</postgresql.version>
 	</properties>
